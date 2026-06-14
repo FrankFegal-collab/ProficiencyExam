@@ -305,7 +305,7 @@ function AppContent() {
               className="cursor-default select-none hover:text-indigo-400/30 transition duration-550"
               title="Official Institutional administration portal access"
             >
-              © 2026 Polytechnic Institute of Tabaco • BSIT Study Center
+              Bachelor of Science in information technology 2026
             </span>
           </div>
           <div className="flex justify-center gap-4 text-[10px] uppercase font-mono tracking-wider text-gray-650">
