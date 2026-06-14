@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode, useCallback 
 import { doc, getDoc, setDoc, collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
 import { db, OperationType, handleFirestoreError } from "../utils/firebase";
 import { UserStats, LeaderboardEntry } from "../types";
-import { getAvatarUrl } from "../utils/gameUtils";
+import { getInitialStats, saveUserStats, getAvatarUrl } from "../utils/gameUtils";
 
 interface FirebaseContextType {
   user: { uid: string; isAnonymous: boolean } | null;
@@ -10,16 +10,16 @@ interface FirebaseContextType {
   signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   onlineLeaderboard: LeaderboardEntry[];
-  syncUserStatsToCloud: (stats: UserStats, username: string) => Promise<void>;
+  stats: UserStats;
+  currentUsername: string;
+  updateStats: (newStats: UserStats, newlyUnlocked: string[]) => Promise<void>;
+  updateUsername: (newUsername: string, avatarId?: string) => Promise<void>;
+  resetProgressAll: () => Promise<void>;
 }
 
 const FirebaseContext = createContext<FirebaseContextType | undefined>(undefined);
 
-export function FirebaseProvider({ children, currentStats, onStatsLoaded }: {
-  children: ReactNode;
-  currentStats: UserStats;
-  onStatsLoaded: (stats: UserStats, username: string) => void;
-}) {
+export function FirebaseProvider({ children }: { children: ReactNode }) {
   const [studentUid] = useState<string>(() => {
     let uid = localStorage.getItem("pit_bsit_student_uuid");
     if (!uid) {
@@ -37,7 +37,20 @@ export function FirebaseProvider({ children, currentStats, onStatsLoaded }: {
   const [loading, setLoading] = useState(true);
   const [onlineLeaderboard, setOnlineLeaderboard] = useState<LeaderboardEntry[]>([]);
 
-  // Load user data on startup and sync
+  // Local state initialized immediately from cache to avoid flicker on load
+  const [stats, setStats] = useState<UserStats>(() => getInitialStats());
+  const [currentUsername, setCurrentUsername] = useState<string>(() => {
+    const cached = localStorage.getItem("pit_bsit_student_username");
+    if (cached && cached !== "enter nickname" && cached.trim() !== "") {
+      return cached;
+    }
+    const randomHex = Math.random().toString(36).substring(2, 6).toUpperCase();
+    const generatedName = `Classmate_${randomHex}`;
+    localStorage.setItem("pit_bsit_student_username", generatedName);
+    return generatedName;
+  });
+
+  // Load cloud data on startup and perform a smart merge
   useEffect(() => {
     let isSubscribed = true;
 
@@ -49,31 +62,30 @@ export function FirebaseProvider({ children, currentStats, onStatsLoaded }: {
         if (docSnap.exists()) {
           const cloudData = docSnap.data() as any;
 
-          // Perform a unified smart merge of local and cloud progress
+          // Merge local and cloud progress intelligently
           const fetchedStats: UserStats = {
             xp: cloudData.xp ?? 0,
             level: cloudData.level ?? 1,
-            streak: cloudData.streak ?? 0,
+            streak: Math.max(stats.streak ?? 0, cloudData.streak ?? 0),
             lastActiveDate: cloudData.lastActiveDate ?? new Date().toISOString().split("T")[0],
-            totalAnswered: cloudData.totalAnswered ?? 0,
-            totalCorrect: cloudData.totalCorrect ?? 0,
-            totalWrong: cloudData.totalWrong ?? 0,
-            subjectProgress: currentStats.subjectProgress,
+            totalAnswered: Math.max(stats.totalAnswered ?? 0, cloudData.totalAnswered ?? 0),
+            totalCorrect: Math.max(stats.totalCorrect ?? 0, cloudData.totalCorrect ?? 0),
+            totalWrong: Math.max(stats.totalWrong ?? 0, cloudData.totalWrong ?? 0),
+            subjectProgress: stats.subjectProgress,
             unlockedBadges: Array.from(new Set([
-              ...(currentStats.unlockedBadges || []),
+              ...(stats.unlockedBadges || []),
               ...(cloudData.unlockedBadges || [])
             ])),
-            survivalHighScore: Math.max(currentStats.survivalHighScore ?? 0, cloudData.survivalHighScore ?? 0),
-            avatarId: cloudData.avatarId ?? currentStats.avatarId ?? "pixel_dev",
+            survivalHighScore: Math.max(stats.survivalHighScore ?? 0, cloudData.survivalHighScore ?? 0),
+            avatarId: cloudData.avatarId ?? stats.avatarId ?? "pixel_dev",
           };
 
-          // To provide a robust user experience and avoid overwriting newer local progress,
-          // compare levels and XP to determine if the local device has unsaved progress.
-          const localIsAhead = (currentStats.level > fetchedStats.level) || 
-                               (currentStats.level === fetchedStats.level && currentStats.xp > fetchedStats.xp);
+          // To avoid overwriting newer local progress, check if local device is ahead
+          const localIsAhead = (stats.level > fetchedStats.level) || 
+                               (stats.level === fetchedStats.level && stats.xp > fetchedStats.xp);
 
           const finalStats = localIsAhead ? {
-            ...currentStats,
+            ...stats,
             unlockedBadges: fetchedStats.unlockedBadges,
             survivalHighScore: fetchedStats.survivalHighScore,
           } : fetchedStats;
@@ -82,13 +94,34 @@ export function FirebaseProvider({ children, currentStats, onStatsLoaded }: {
           if (!loadedUsername || loadedUsername === "enter nickname" || loadedUsername.trim() === "") {
             const randomHex = Math.random().toString(36).substring(2, 6).toUpperCase();
             loadedUsername = `Classmate_${randomHex}`;
-            localStorage.setItem("pit_bsit_student_username", loadedUsername);
           }
+
+          localStorage.setItem("pit_bsit_student_username", loadedUsername);
+          saveUserStats(finalStats);
+
           if (isSubscribed) {
-            onStatsLoaded(finalStats, loadedUsername);
+            setStats(finalStats);
+            setCurrentUsername(loadedUsername);
+
+            // Immediately sync back to the cloud if the local stats were further ahead
+            if (localIsAhead) {
+              const payload = {
+                username: loadedUsername.substring(0, 18),
+                xp: finalStats.xp,
+                level: finalStats.level,
+                streak: finalStats.streak,
+                lastActiveDate: finalStats.lastActiveDate,
+                totalAnswered: finalStats.totalAnswered,
+                totalCorrect: finalStats.totalCorrect,
+                totalWrong: finalStats.totalWrong,
+                survivalHighScore: finalStats.survivalHighScore,
+                avatarId: finalStats.avatarId ?? "pixel_dev",
+              };
+              await setDoc(userDocRef, payload);
+            }
           }
         } else {
-          // Document doesn't exist, provision it with current local stats
+          // Document does not exist in Firestore yet: provision with current local specs
           let defaultName = localStorage.getItem("pit_bsit_student_username");
           if (!defaultName || defaultName === "enter nickname" || defaultName.trim() === "") {
             const randomHex = Math.random().toString(36).substring(2, 6).toUpperCase();
@@ -97,20 +130,17 @@ export function FirebaseProvider({ children, currentStats, onStatsLoaded }: {
           }
           const payload = {
             username: defaultName.substring(0, 18),
-            xp: currentStats.xp,
-            level: currentStats.level,
-            streak: currentStats.streak,
-            lastActiveDate: currentStats.lastActiveDate,
-            totalAnswered: currentStats.totalAnswered,
-            totalCorrect: currentStats.totalCorrect,
-            totalWrong: currentStats.totalWrong,
-            survivalHighScore: currentStats.survivalHighScore,
-            avatarId: currentStats.avatarId ?? "pixel_dev",
+            xp: stats.xp,
+            level: stats.level,
+            streak: stats.streak,
+            lastActiveDate: stats.lastActiveDate,
+            totalAnswered: stats.totalAnswered,
+            totalCorrect: stats.totalCorrect,
+            totalWrong: stats.totalWrong,
+            survivalHighScore: stats.survivalHighScore,
+            avatarId: stats.avatarId ?? "pixel_dev",
           };
           await setDoc(userDocRef, payload);
-          if (isSubscribed) {
-            onStatsLoaded(currentStats, payload.username);
-          }
         }
       } catch (error) {
         console.error("Error setting up user profile in Firestore:", error);
@@ -126,11 +156,14 @@ export function FirebaseProvider({ children, currentStats, onStatsLoaded }: {
     return () => {
       isSubscribed = false;
     };
-  }, [studentUid, onStatsLoaded]);
+  }, [studentUid]);
 
-  // Listen to the real-time leaderboard data from Firestore
+  // Real-time listener for the leaderboard
   useEffect(() => {
-    const q = query(collection(db, "users"), orderBy("xp", "desc"), limit(30));
+    // Single-field ordering (natively indexed in Firestore; never fails or triggers composite index issues)
+    // We scale limit to 100 on level, then sort by cumulative total XP client-side for ultra-accurate ranking.
+    const q = query(collection(db, "users"), orderBy("level", "desc"), limit(100));
+    
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
@@ -144,16 +177,27 @@ export function FirebaseProvider({ children, currentStats, onStatsLoaded }: {
             username = "Anonymous Classmate";
           }
 
+          // Calculate cumulative/total XP for accurate sorting
+          let cumulativeXp = data.xp || 0;
+          const level = data.level || 1;
+          for (let i = 1; i < level; i++) {
+            cumulativeXp += i * 300; // matching getXPNeededForLevel(i)
+          }
+
           uList.push({
             username: username,
             avatar: getAvatarUrl(username, data.avatarId),
-            level: data.level || 1,
-            xp: data.xp || 0,
-            score: data.xp || 0,
+            level: level,
+            xp: cumulativeXp,
+            score: cumulativeXp,
             isCurrentUser: isUser,
           });
         });
-        setOnlineLeaderboard(uList);
+
+        // Client-side sort on real cumulative total XP
+        uList.sort((a, b) => b.xp - a.xp);
+
+        setOnlineLeaderboard(uList.slice(0, 30)); // Take top 30 classmates
       },
       (error) => {
         handleFirestoreError(error, OperationType.LIST, "users");
@@ -163,34 +207,112 @@ export function FirebaseProvider({ children, currentStats, onStatsLoaded }: {
     return () => unsubscribe();
   }, [studentUid]);
 
-  const signInWithGoogle = async () => {
-    // No-op since Google authentication is removed
-  };
+  // Safe handler to update stats both locally and on the cloud
+  const updateStats = useCallback(async (newStats: UserStats, newlyUnlocked: string[]) => {
+    setStats(newStats);
+    saveUserStats(newStats);
 
-  const logout = async () => {
-    // No-op
-  };
-
-  const syncUserStatsToCloud = useCallback(async (stats: UserStats, username: string) => {
     try {
       const userDocRef = doc(db, "users", studentUid);
       const payload = {
-        username: username.substring(0, 18),
-        xp: stats.xp,
-        level: stats.level,
-        streak: stats.streak,
-        lastActiveDate: stats.lastActiveDate,
-        totalAnswered: stats.totalAnswered,
-        totalCorrect: stats.totalCorrect,
-        totalWrong: stats.totalWrong,
-        survivalHighScore: stats.survivalHighScore,
-        avatarId: stats.avatarId ?? "pixel_dev",
+        username: currentUsername.substring(0, 18),
+        xp: newStats.xp,
+        level: newStats.level,
+        streak: newStats.streak,
+        lastActiveDate: newStats.lastActiveDate,
+        totalAnswered: newStats.totalAnswered,
+        totalCorrect: newStats.totalCorrect,
+        totalWrong: newStats.totalWrong,
+        survivalHighScore: newStats.survivalHighScore,
+        avatarId: newStats.avatarId ?? "pixel_dev",
       };
       await setDoc(userDocRef, payload, { merge: true });
     } catch (error) {
       console.error("Error updating user statistics in Firestore: ", error);
     }
+  }, [studentUid, currentUsername]);
+
+  // Safe handler to update nickname and/or avatar ID both locally and on the cloud
+  const updateUsername = useCallback(async (newUsername: string, avatarId?: string) => {
+    setCurrentUsername(newUsername);
+    localStorage.setItem("pit_bsit_student_username", newUsername);
+
+    const updatedStats = { ...stats };
+    if (avatarId) {
+      updatedStats.avatarId = avatarId;
+      setStats(updatedStats);
+      saveUserStats(updatedStats);
+    }
+
+    try {
+      const userDocRef = doc(db, "users", studentUid);
+      const payload = {
+        username: newUsername.substring(0, 18),
+        xp: updatedStats.xp,
+        level: updatedStats.level,
+        streak: updatedStats.streak,
+        lastActiveDate: updatedStats.lastActiveDate,
+        totalAnswered: updatedStats.totalAnswered,
+        totalCorrect: updatedStats.totalCorrect,
+        totalWrong: updatedStats.totalWrong,
+        survivalHighScore: updatedStats.survivalHighScore,
+        avatarId: updatedStats.avatarId ?? "pixel_dev",
+      };
+      await setDoc(userDocRef, payload, { merge: true });
+    } catch (error) {
+      console.error("Error updating nickname in Firestore: ", error);
+    }
+  }, [studentUid, stats]);
+
+  // Safe progress purge handler
+  const resetProgressAll = useCallback(async () => {
+    localStorage.removeItem("pit_bsit_user_stats");
+    localStorage.removeItem("pit_bsit_student_username");
+
+    const defaultStats: UserStats = {
+      xp: 0,
+      level: 1,
+      streak: 0,
+      lastActiveDate: new Date().toISOString().split("T")[0],
+      totalAnswered: 0,
+      totalCorrect: 0,
+      totalWrong: 0,
+      subjectProgress: {},
+      unlockedBadges: [],
+      survivalHighScore: 0,
+      avatarId: "pixel_dev"
+    };
+
+    const randomHex = Math.random().toString(36).substring(2, 6).toUpperCase();
+    const defaultName = `Classmate_${randomHex}`;
+    localStorage.setItem("pit_bsit_student_username", defaultName);
+
+    setStats(defaultStats);
+    setCurrentUsername(defaultName);
+    saveUserStats(defaultStats);
+
+    try {
+      const userDocRef = doc(db, "users", studentUid);
+      const payload = {
+        username: defaultName.substring(0, 18),
+        xp: defaultStats.xp,
+        level: defaultStats.level,
+        streak: defaultStats.streak,
+        lastActiveDate: defaultStats.lastActiveDate,
+        totalAnswered: defaultStats.totalAnswered,
+        totalCorrect: defaultStats.totalCorrect,
+        totalWrong: defaultStats.totalWrong,
+        survivalHighScore: defaultStats.survivalHighScore,
+        avatarId: defaultStats.avatarId,
+      };
+      await setDoc(userDocRef, payload);
+    } catch (error) {
+      console.error("Error resetting user document in Firestore: ", error);
+    }
   }, [studentUid]);
+
+  const signInWithGoogle = async () => {};
+  const logout = async () => {};
 
   return (
     <FirebaseContext.Provider
@@ -200,7 +322,11 @@ export function FirebaseProvider({ children, currentStats, onStatsLoaded }: {
         signInWithGoogle,
         logout,
         onlineLeaderboard,
-        syncUserStatsToCloud,
+        stats,
+        currentUsername,
+        updateStats,
+        updateUsername,
+        resetProgressAll,
       }}
     >
       {children}

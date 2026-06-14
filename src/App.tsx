@@ -15,61 +15,25 @@ import { FirebaseProvider, useFirebase } from "./context/FirebaseContext";
 
 export default function App() {
   return (
-    <FirebaseProviderWrapper />
-  );
-}
-
-function FirebaseProviderWrapper() {
-  const [currentStats, setCurrentStats] = useState<UserStats>(() => getInitialStats());
-  
-  // Store the actual loader callback in a ref to keep it completely stable across renders,
-  // preventing the surrounding FirebaseProvider and its useEffect from triggering multiple times.
-  const statsLoadedHandlerRef = useRef<((stats: UserStats, username: string) => void) | null>(null);
-
-  const handleStatsLoaded = useCallback((stats: UserStats, username: string) => {
-    if (statsLoadedHandlerRef.current) {
-      statsLoadedHandlerRef.current(stats, username);
-    }
-  }, []);
-
-  const registerStatsLoader = useCallback((handler: (stats: UserStats, username: string) => void) => {
-    statsLoadedHandlerRef.current = handler;
-  }, []);
-
-  return (
-    <FirebaseProvider
-      currentStats={currentStats}
-      onStatsLoaded={handleStatsLoaded}
-    >
-      <AppContent
-        currentStats={currentStats}
-        registerStatsLoader={registerStatsLoader}
-      />
+    <FirebaseProvider>
+      <AppContent />
     </FirebaseProvider>
   );
 }
 
-function AppContent({ currentStats, registerStatsLoader }: {
-  currentStats: UserStats;
-  registerStatsLoader: (handler: (stats: UserStats, username: string) => void) => void;
-}) {
-  const { user, loading, signInWithGoogle, logout, onlineLeaderboard, syncUserStatsToCloud } = useFirebase();
-
-  // Global States
-  const [stats, setStats] = useState<UserStats>(currentStats);
-  const [currentUsername, setCurrentUsername] = useState<string>(() => {
-    const cached = localStorage.getItem("pit_bsit_student_username");
-    if (cached && cached !== "enter nickname" && cached.trim() !== "") {
-      return cached;
-    }
-    const randomHex = Math.random().toString(36).substring(2, 6).toUpperCase();
-    const generatedName = `Classmate_${randomHex}`;
-    localStorage.setItem("pit_bsit_student_username", generatedName);
-    return generatedName;
-  });
-
-  // Flag to protect cloud records from being overwritten on boot with local stats.
-  const [hasLoadedFromCloud, setHasLoadedFromCloud] = useState(false);
+function AppContent() {
+  const {
+    user,
+    loading,
+    signInWithGoogle,
+    logout,
+    onlineLeaderboard,
+    stats,
+    currentUsername,
+    updateStats,
+    updateUsername,
+    resetProgressAll,
+  } = useFirebase();
 
   const [activeMode, setActiveMode] = useState<"LOBBY" | "SUBJECT" | "QUICK" | "SURVIVAL" | "EXAM" | "DAILY" | "RESULTS" | "STUDY" | "ADMIN">("LOBBY");
   const [selectedSubject, setSelectedSubject] = useState<string>("");
@@ -94,52 +58,14 @@ function AppContent({ currentStats, registerStatsLoader }: {
   const [achievementAlert, setAchievementAlert] = useState<string | null>(null);
   const [levelUpAlert, setLevelUpAlert] = useState<number | null>(null);
 
-  // Register custom handler to listen to stats loaded from cloud DB
-  useEffect(() => {
-    registerStatsLoader((loadedStats, loadedUsername) => {
-      setStats(loadedStats);
-      setCurrentUsername(loadedUsername);
-      saveUserStats(loadedStats);
-      localStorage.setItem("pit_bsit_student_username", loadedUsername);
-      setHasLoadedFromCloud(true); // Flag that we have securely downloaded/merged cloud progress
-    });
-  }, [registerStatsLoader]);
-
   const handleSignOut = async () => {
     try {
-      await logout();
-      localStorage.removeItem("pit_bsit_student_username");
-      localStorage.removeItem("pit_bsit_user_stats");
-      
-      const defaultStats: UserStats = {
-        xp: 0,
-        level: 1,
-        streak: 1,
-        lastActiveDate: new Date().toISOString().split("T")[0],
-        totalAnswered: 0,
-        totalCorrect: 0,
-        totalWrong: 0,
-        subjectProgress: {},
-        unlockedBadges: [],
-        survivalHighScore: 0
-      };
-      setStats(defaultStats);
-      saveUserStats(defaultStats);
-      setCurrentUsername("enter nickname");
+      await resetProgressAll();
       setActiveMode("LOBBY");
-      setHasLoadedFromCloud(false);
     } catch (err) {
       console.error("Failed to safely sign out user:", err);
     }
   };
-
-  // Synchronize local changes to Firestore if connected, fully loaded, and cloud load has occurred.
-  // This absolutely guarantees that we NEVER wipe out a user's cloud-accumulated XP/scores during initial boot.
-  useEffect(() => {
-    if (user && !loading && hasLoadedFromCloud) {
-      syncUserStatsToCloud(stats, currentUsername);
-    }
-  }, [stats, currentUsername, user, loading, hasLoadedFromCloud, syncUserStatsToCloud]);
 
   // Check if system query parameter is set to admin on boot
   useEffect(() => {
@@ -154,8 +80,7 @@ function AppContent({ currentStats, registerStatsLoader }: {
     if (newStats.level > stats.level) {
       setLevelUpAlert(newStats.level);
     }
-    setStats(newStats);
-    saveUserStats(newStats);
+    updateStats(newStats, newlyUnlocked);
 
     if (newlyUnlocked.length > 0) {
       setAchievementAlert(newlyUnlocked.join(", "));
@@ -163,39 +88,11 @@ function AppContent({ currentStats, registerStatsLoader }: {
   };
 
   const handleUsernameChange = (newNick: string, newAvatarId?: string) => {
-    setCurrentUsername(newNick);
-    localStorage.setItem("pit_bsit_student_username", newNick);
-    if (newAvatarId) {
-      setStats((prev) => {
-        const nextStats = { ...prev, avatarId: newAvatarId };
-        saveUserStats(nextStats);
-        return nextStats;
-      });
-    }
+    updateUsername(newNick, newAvatarId);
   };
 
   const handleResetProgressAll = () => {
-    localStorage.removeItem("pit_bsit_user_stats");
-    localStorage.removeItem("pit_bsit_student_username");
-    
-    // reset stats hook
-    const defaultStats: UserStats = {
-      xp: 0,
-      level: 1,
-      streak: 0,
-      lastActiveDate: new Date().toISOString().split("T")[0],
-      totalAnswered: 0,
-      totalCorrect: 0,
-      totalWrong: 0,
-      subjectProgress: {},
-      unlockedBadges: [],
-      survivalHighScore: 0,
-      avatarId: "pixel_dev"
-    };
-    
-    setStats(defaultStats);
-    saveUserStats(defaultStats);
-    setCurrentUsername("enter nickname");
+    resetProgressAll();
     setActiveMode("LOBBY");
   };
 
