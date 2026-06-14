@@ -5,8 +5,7 @@ import {
   generateWeaknessAnalysis,
   getXPNeededForLevel,
   getAvatarUrl,
-  getRankTitle,
-  getLeaderboard
+  getRankTitle
 } from "../utils/gameUtils";
 import { audio } from "../utils/audio";
 import {
@@ -382,7 +381,16 @@ export default function Dashboard({
 
             {/* Scoreboard listing */}
             <div className="flex flex-col gap-2 max-h-[340px] overflow-y-auto pr-1">
-              {getLeaderboard(stats, "global", currentUsername).map((e, index) => {
+              {(onlineLeaderboard && onlineLeaderboard.length > 0
+                ? [...onlineLeaderboard].sort((a, b) => b.xp - a.xp)
+                : [{
+                    username: currentUsername,
+                    avatar: getAvatarUrl(currentUsername),
+                    level: stats.level,
+                    xp: stats.xp,
+                    isCurrentUser: true
+                  }]
+              ).map((e, index) => {
                 const rank = index + 1;
                 const isUser = e.username === currentUsername;
                 let rankStyle = "bg-slate-950 text-gray-400";
@@ -417,6 +425,15 @@ export default function Dashboard({
                 );
               })}
             </div>
+
+            {/* Hint to join scoreboard for other classmates */}
+            {(!onlineLeaderboard || onlineLeaderboard.length <= 1) && (
+              <div className="mt-3 p-2.5 bg-slate-950/50 border border-indigo-950/40 rounded-xl text-center">
+                <p className="text-[9px] text-indigo-300 font-medium leading-relaxed font-mono">
+                  📢 Tell your classmates to enter their Nickname and click "Save Details" to compete together in real-time!
+                </p>
+              </div>
+            )}
           </div>
         </div>
 

@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { User, onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth";
+import { User, onAuthStateChanged, signInWithPopup, signOut, signInAnonymously } from "firebase/auth";
 import { doc, getDoc, setDoc, updateDoc, collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
 import { auth, db, googleProvider, OperationType, handleFirestoreError } from "../utils/firebase";
 import { UserStats, LeaderboardEntry } from "../types";
@@ -28,8 +28,8 @@ export function FirebaseProvider({ children, currentStats, onStatsLoaded }: {
   // Track Firebase Auth state
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setUser(firebaseUser);
       if (firebaseUser) {
+        setUser(firebaseUser);
         try {
           const userDocRef = doc(db, "users", firebaseUser.uid);
           const docSnap = await getDoc(userDocRef);
@@ -48,11 +48,11 @@ export function FirebaseProvider({ children, currentStats, onStatsLoaded }: {
               unlockedBadges: cloudData.unlockedBadges ?? [],
               survivalHighScore: cloudData.survivalHighScore ?? 0,
             };
-            const loadedUsername = cloudData.username || firebaseUser.displayName || `Student_${firebaseUser.uid.substring(0, 5)}`;
+            const loadedUsername = cloudData.username || localStorage.getItem("pit_bsit_student_username") || `Student_${firebaseUser.uid.substring(0, 5)}`;
             onStatsLoaded(fetchedStats, loadedUsername);
           } else {
             // Document doesn't exist, provision it with current local stats
-            const defaultName = firebaseUser.displayName?.replace(/[^a-zA-Z0-9_]/g, "") || `Student_${firebaseUser.uid.substring(0, 5)}`;
+            const defaultName = localStorage.getItem("pit_bsit_student_username") || firebaseUser.displayName?.replace(/[^a-zA-Z0-9_]/g, "") || `Student_${firebaseUser.uid.substring(0, 5)}`;
             const payload = {
               username: defaultName.substring(0, 18),
               xp: currentStats.xp,
@@ -70,6 +70,14 @@ export function FirebaseProvider({ children, currentStats, onStatsLoaded }: {
         } catch (error) {
           console.error("Error setting up user profile in Firestore", error);
         }
+      } else {
+        setUser(null);
+        // Automatic anonymous guest login
+        try {
+          await signInAnonymously(auth);
+        } catch (error) {
+          console.error("Anonymous authentication is disabled or failed in Firebase:", error);
+        }
       }
       setLoading(false);
     });
@@ -84,27 +92,30 @@ export function FirebaseProvider({ children, currentStats, onStatsLoaded }: {
       return;
     }
 
-    const q = query(collection(db, "users"), orderBy("xp", "desc"), limit(25));
+    const q = query(collection(db, "users"), orderBy("xp", "desc"), limit(30));
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
         const uList: LeaderboardEntry[] = [];
         snapshot.forEach((docSnap) => {
           const data = docSnap.data();
-          // Map to LeaderboardEntry shape
-          let userTotalXP = data.xp || 0;
-          for (let i = 1; i < (data.level || 1); i++) {
-            userTotalXP += i * 300; // Formula matching gameUtils.ts: level * 300
-          }
+          const isUser = docSnap.id === user.uid;
+          
+          // Only show classmates who have entered their exact custom nicknames, 
+          // or always include the current guest user so they see themselves.
+          const username = data.username || "Anonymous";
+          const isDefaultName = username === "enter nickname" || username.trim() === "";
 
-          uList.push({
-            username: data.username || "Anonymous",
-            avatar: getAvatarUrl(data.username || "Anonymous"),
-            level: data.level || 1,
-            xp: userTotalXP,
-            score: data.xp || 0, // Fallback placeholder or XP
-            isCurrentUser: docSnap.id === user.uid,
-          });
+          if (isUser || !isDefaultName) {
+            uList.push({
+              username: username,
+              avatar: getAvatarUrl(username),
+              level: data.level || 1,
+              xp: data.xp || 0,
+              score: data.xp || 0,
+              isCurrentUser: isUser,
+            });
+          }
         });
         setOnlineLeaderboard(uList);
       },
