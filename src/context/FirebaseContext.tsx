@@ -1,12 +1,11 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { User, onAuthStateChanged, signInWithPopup, signOut, signInAnonymously } from "firebase/auth";
-import { doc, getDoc, setDoc, updateDoc, collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
-import { auth, db, googleProvider, OperationType, handleFirestoreError } from "../utils/firebase";
+import { doc, getDoc, setDoc, collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
+import { db, OperationType, handleFirestoreError } from "../utils/firebase";
 import { UserStats, LeaderboardEntry } from "../types";
-import { getAvatarUrl, getXPNeededForLevel } from "../utils/gameUtils";
+import { getAvatarUrl } from "../utils/gameUtils";
 
 interface FirebaseContextType {
-  user: User | null;
+  user: { uid: string; isAnonymous: boolean } | null;
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
@@ -21,77 +20,87 @@ export function FirebaseProvider({ children, currentStats, onStatsLoaded }: {
   currentStats: UserStats;
   onStatsLoaded: (stats: UserStats, username: string) => void;
 }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [studentUid] = useState<string>(() => {
+    let uid = localStorage.getItem("pit_bsit_student_uuid");
+    if (!uid) {
+      uid = "guest_" + Math.random().toString(36).substring(2, 11) + "_" + Date.now();
+      localStorage.setItem("pit_bsit_student_uuid", uid);
+    }
+    return uid;
+  });
+
+  const [user] = useState<{ uid: string; isAnonymous: boolean }>(() => ({
+    uid: studentUid,
+    isAnonymous: true,
+  }));
+
   const [loading, setLoading] = useState(true);
   const [onlineLeaderboard, setOnlineLeaderboard] = useState<LeaderboardEntry[]>([]);
 
-  // Track Firebase Auth state
+  // Load user data on startup and sync
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        setUser(firebaseUser);
-        try {
-          const userDocRef = doc(db, "users", firebaseUser.uid);
-          const docSnap = await getDoc(userDocRef);
+    let isSubscribed = true;
 
-          if (docSnap.exists()) {
-            const cloudData = docSnap.data() as any;
-            const fetchedStats: UserStats = {
-              xp: cloudData.xp ?? 0,
-              level: cloudData.level ?? 1,
-              streak: cloudData.streak ?? 0,
-              lastActiveDate: cloudData.lastActiveDate ?? new Date().toISOString().split("T")[0],
-              totalAnswered: cloudData.totalAnswered ?? 0,
-              totalCorrect: cloudData.totalCorrect ?? 0,
-              totalWrong: cloudData.totalWrong ?? 0,
-              subjectProgress: currentStats.subjectProgress, // keep local or fall back
-              unlockedBadges: cloudData.unlockedBadges ?? [],
-              survivalHighScore: cloudData.survivalHighScore ?? 0,
-            };
-            const loadedUsername = cloudData.username || localStorage.getItem("pit_bsit_student_username") || `Student_${firebaseUser.uid.substring(0, 5)}`;
+    async function loadStatsAndProvision() {
+      try {
+        const userDocRef = doc(db, "users", studentUid);
+        const docSnap = await getDoc(userDocRef);
+
+        if (docSnap.exists()) {
+          const cloudData = docSnap.data() as any;
+          const fetchedStats: UserStats = {
+            xp: cloudData.xp ?? 0,
+            level: cloudData.level ?? 1,
+            streak: cloudData.streak ?? 0,
+            lastActiveDate: cloudData.lastActiveDate ?? new Date().toISOString().split("T")[0],
+            totalAnswered: cloudData.totalAnswered ?? 0,
+            totalCorrect: cloudData.totalCorrect ?? 0,
+            totalWrong: cloudData.totalWrong ?? 0,
+            subjectProgress: currentStats.subjectProgress,
+            unlockedBadges: cloudData.unlockedBadges ?? [],
+            survivalHighScore: cloudData.survivalHighScore ?? 0,
+          };
+          const loadedUsername = cloudData.username || localStorage.getItem("pit_bsit_student_username") || "enter nickname";
+          if (isSubscribed) {
             onStatsLoaded(fetchedStats, loadedUsername);
-          } else {
-            // Document doesn't exist, provision it with current local stats
-            const defaultName = localStorage.getItem("pit_bsit_student_username") || firebaseUser.displayName?.replace(/[^a-zA-Z0-9_]/g, "") || `Student_${firebaseUser.uid.substring(0, 5)}`;
-            const payload = {
-              username: defaultName.substring(0, 18),
-              xp: currentStats.xp,
-              level: currentStats.level,
-              streak: currentStats.streak,
-              lastActiveDate: currentStats.lastActiveDate,
-              totalAnswered: currentStats.totalAnswered,
-              totalCorrect: currentStats.totalCorrect,
-              totalWrong: currentStats.totalWrong,
-              survivalHighScore: currentStats.survivalHighScore,
-            };
-            await setDoc(userDocRef, payload);
+          }
+        } else {
+          // Document doesn't exist, provision it with current local stats
+          const defaultName = localStorage.getItem("pit_bsit_student_username") || "enter nickname";
+          const payload = {
+            username: defaultName.substring(0, 18),
+            xp: currentStats.xp,
+            level: currentStats.level,
+            streak: currentStats.streak,
+            lastActiveDate: currentStats.lastActiveDate,
+            totalAnswered: currentStats.totalAnswered,
+            totalCorrect: currentStats.totalCorrect,
+            totalWrong: currentStats.totalWrong,
+            survivalHighScore: currentStats.survivalHighScore,
+          };
+          await setDoc(userDocRef, payload);
+          if (isSubscribed) {
             onStatsLoaded(currentStats, payload.username);
           }
-        } catch (error) {
-          console.error("Error setting up user profile in Firestore", error);
         }
-      } else {
-        setUser(null);
-        // Automatic anonymous guest login
-        try {
-          await signInAnonymously(auth);
-        } catch (error) {
-          console.error("Anonymous authentication is disabled or failed in Firebase:", error);
+      } catch (error) {
+        console.error("Error setting up user profile in Firestore:", error);
+      } finally {
+        if (isSubscribed) {
+          setLoading(false);
         }
       }
-      setLoading(false);
-    });
+    }
 
-    return () => unsubscribe();
-  }, [onStatsLoaded]);
+    loadStatsAndProvision();
+
+    return () => {
+      isSubscribed = false;
+    };
+  }, [studentUid, onStatsLoaded]);
 
   // Listen to the real-time leaderboard data from Firestore
   useEffect(() => {
-    if (!user) {
-      setOnlineLeaderboard([]);
-      return;
-    }
-
     const q = query(collection(db, "users"), orderBy("xp", "desc"), limit(30));
     const unsubscribe = onSnapshot(
       q,
@@ -99,7 +108,7 @@ export function FirebaseProvider({ children, currentStats, onStatsLoaded }: {
         const uList: LeaderboardEntry[] = [];
         snapshot.forEach((docSnap) => {
           const data = docSnap.data();
-          const isUser = docSnap.id === user.uid;
+          const isUser = docSnap.id === studentUid;
           
           // Only show classmates who have entered their exact custom nicknames, 
           // or always include the current guest user so they see themselves.
@@ -125,28 +134,19 @@ export function FirebaseProvider({ children, currentStats, onStatsLoaded }: {
     );
 
     return () => unsubscribe();
-  }, [user]);
+  }, [studentUid]);
 
   const signInWithGoogle = async () => {
-    try {
-      await signInWithPopup(auth, googleProvider);
-    } catch (error) {
-      console.error("Google sign-in error", error);
-    }
+    // No-op since Google authentication is removed
   };
 
   const logout = async () => {
-    try {
-      await signOut(auth);
-    } catch (error) {
-      console.error("Sign-out error", error);
-    }
+    // No-op
   };
 
   const syncUserStatsToCloud = async (stats: UserStats, username: string) => {
-    if (!user) return;
     try {
-      const userDocRef = doc(db, "users", user.uid);
+      const userDocRef = doc(db, "users", studentUid);
       const payload = {
         username: username.substring(0, 18),
         xp: stats.xp,
@@ -158,7 +158,7 @@ export function FirebaseProvider({ children, currentStats, onStatsLoaded }: {
         totalWrong: stats.totalWrong,
         survivalHighScore: stats.survivalHighScore,
       };
-      await updateDoc(userDocRef, payload);
+      await setDoc(userDocRef, payload, { merge: true });
     } catch (error) {
       console.error("Error updating user statistics in Firestore: ", error);
     }

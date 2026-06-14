@@ -36,15 +36,13 @@ service cloud.firestore {
 
     // Match rules for the users collection
     match /users/{userId} {
-      allow get: if isSignedIn() && isValidId(userId);
-      allow list: if isSignedIn(); // Authorized users can view profiles for the classmates leaderboard
+      allow get: if isValidId(userId);
+      allow list: if true; // Public access for classmates leaderboard
       
-      allow create: if isOwner(userId) 
-                    && isValidId(userId)
+      allow create: if isValidId(userId)
                     && isValidUserProfile(request.resource.data);
                     
-      allow update: if isOwner(userId)
-                    && isValidId(userId)
+      allow update: if isValidId(userId)
                     && isValidUserProfile(request.resource.data);
                     
       allow delete: if false; // Profiles cannot be deleted from the client
