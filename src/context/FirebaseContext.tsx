@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
 import { doc, getDoc, setDoc, collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
 import { db, OperationType, handleFirestoreError } from "../utils/firebase";
 import { UserStats, LeaderboardEntry } from "../types";
@@ -154,7 +154,7 @@ export function FirebaseProvider({ children, currentStats, onStatsLoaded }: {
     // No-op
   };
 
-  const syncUserStatsToCloud = async (stats: UserStats, username: string) => {
+  const syncUserStatsToCloud = useCallback(async (stats: UserStats, username: string) => {
     try {
       const userDocRef = doc(db, "users", studentUid);
       const payload = {
@@ -173,7 +173,7 @@ export function FirebaseProvider({ children, currentStats, onStatsLoaded }: {
     } catch (error) {
       console.error("Error updating user statistics in Firestore: ", error);
     }
-  };
+  }, [studentUid]);
 
   return (
     <FirebaseContext.Provider
