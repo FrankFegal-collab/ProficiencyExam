@@ -49,7 +49,7 @@ function AppContent({ currentStats, registerStatsLoader }: {
   // Global States
   const [stats, setStats] = useState<UserStats>(currentStats);
   const [currentUsername, setCurrentUsername] = useState<string>(() => {
-    const emailPrefix = "ninofegal101";
+    const emailPrefix = "enter nickname";
     const cached = localStorage.getItem("pit_bsit_student_username");
     return cached || emailPrefix;
   });
@@ -86,6 +86,33 @@ function AppContent({ currentStats, registerStatsLoader }: {
       localStorage.setItem("pit_bsit_student_username", loadedUsername);
     });
   }, [registerStatsLoader]);
+
+  const handleSignOut = async () => {
+    try {
+      await logout();
+      localStorage.removeItem("pit_bsit_student_username");
+      localStorage.removeItem("pit_bsit_user_stats");
+      
+      const defaultStats: UserStats = {
+        xp: 0,
+        level: 1,
+        streak: 1,
+        lastActiveDate: new Date().toISOString().split("T")[0],
+        totalAnswered: 0,
+        totalCorrect: 0,
+        totalWrong: 0,
+        subjectProgress: {},
+        unlockedBadges: [],
+        survivalHighScore: 0
+      };
+      setStats(defaultStats);
+      saveUserStats(defaultStats);
+      setCurrentUsername("enter nickname");
+      setActiveMode("LOBBY");
+    } catch (err) {
+      console.error("Failed to safely sign out user:", err);
+    }
+  };
 
   // Synchronize local changes to Firestore if connected
   useEffect(() => {
@@ -140,7 +167,7 @@ function AppContent({ currentStats, registerStatsLoader }: {
     
     setStats(defaultStats);
     saveUserStats(defaultStats);
-    setCurrentUsername("ninofegal101");
+    setCurrentUsername("enter nickname");
     setActiveMode("LOBBY");
   };
 
@@ -207,7 +234,7 @@ function AppContent({ currentStats, registerStatsLoader }: {
         setMode={setActiveMode}
         user={user}
         onSignIn={signInWithGoogle}
-        onSignOut={logout}
+        onSignOut={handleSignOut}
       />
 
       {/* FLOATING LEVEL UP CELEBRATE MODAL */}

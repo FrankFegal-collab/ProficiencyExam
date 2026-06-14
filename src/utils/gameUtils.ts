@@ -121,7 +121,7 @@ export function getAvatarUrl(username: string): string {
 }
 
 // Generate alive competitive leaderboard lists populated with friendly classmates
-export function getLeaderboard(userStats: UserStats, type: "global" | "subject" | "daily" | "survival", currentUsername: string = "ninofegal101"): LeaderboardEntry[] {
+export function getLeaderboard(userStats: UserStats, type: "global" | "subject" | "daily" | "survival", currentUsername: string = "enter nickname"): LeaderboardEntry[] {
   const classmates = [
     { username: "BinaryBoss_PIT", avatar: getAvatarUrl("BinaryBoss_PIT"), level: 44, xp: 14200, score: 24, survivalHighScore: 48 },
     { username: "Grace_Ada_Albay", avatar: getAvatarUrl("Grace_Ada_Albay"), level: 38, xp: 11100, score: 22, survivalHighScore: 25 },

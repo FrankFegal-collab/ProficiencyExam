@@ -441,7 +441,7 @@ export default function Dashboard({
             <div className="mt-4 p-3 bg-slate-950/80 border border-indigo-950/60 rounded-2xl">
               <span className="block text-[9px] font-bold text-indigo-400 uppercase font-mono tracking-wider mb-1">Classmate Registration Gateway</span>
               <p className="text-[10px] text-gray-400 leading-relaxed mb-2">
-                Log in to link your progress, claim a student nickname, and showcase your rank on ALBAY PIT BSIT Scoreboard.
+                Log in to link your progress, claim a student nickname, and showcase your rank on BSIT CLASSMATES SCOREBOARD.
               </p>
               <button
                 onClick={() => { audio.playClick(); onSignIn(); }}

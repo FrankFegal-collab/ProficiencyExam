@@ -2,7 +2,7 @@ import { UserStats } from "../types";
 import { getRankTitle, getXPNeededForLevel, getAvatarUrl } from "../utils/gameUtils";
 import { audio } from "../utils/audio";
 import { Trophy, Volume2, VolumeX, RefreshCw, User as UserIcon, Flame, Award, ShieldAlert } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface HeaderProps {
   stats: UserStats;
@@ -28,6 +28,11 @@ export default function Header({
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [tempUsername, setTempUsername] = useState(currentUsername);
   const [isMuted, setIsMuted] = useState(audio.getMuted());
+
+  // Synchronize dynamic input name when parent changes or modal opens
+  useEffect(() => {
+    setTempUsername(currentUsername);
+  }, [currentUsername, isEditingProfile]);
 
   const xpNeeded = getXPNeededForLevel(stats.level);
   const xpPercent = Math.min(100, Math.round((stats.xp / xpNeeded) * 100));
@@ -149,87 +154,85 @@ export default function Header({
       {/* User Edit Profile Modal Overlay */}
       {isEditingProfile && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-slate-900 border border-blue-900/30 rounded-2xl p-6 max-w-md w-full shadow-2xl shadow-indigo-500/10">
+          <div className="bg-slate-900 border border-blue-900/30 rounded-2xl p-6 max-w-sm w-full shadow-2xl shadow-indigo-500/10">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 bg-indigo-500/20 rounded-xl">
                 <UserIcon className="w-6 h-6 text-indigo-400" />
               </div>
-              <h2 className="text-lg font-bold text-white">Student Registration</h2>
+              <h2 className="text-lg font-bold text-white">Student Profile</h2>
             </div>
 
-            <p className="text-sm text-gray-400 mb-4">
-              Customize your student nickname to personalize your experience.
-            </p>
-
-            {/* Google Authentication Segment */}
-            <div className="mb-5 p-4 bg-slate-950/70 border border-indigo-950/50 rounded-xl">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-bold text-gray-400 uppercase font-mono tracking-wider">Cloud Connect State</span>
-                <span className="text-[9px] font-mono font-black text-indigo-400 uppercase">
-                  {user ? "Cloud Synchronized" : "Local Play Only"}
-                </span>
-              </div>
-              
-              {!user ? (
-                <div>
-                  <p className="text-[11px] text-gray-400 leading-relaxed mb-3">
-                    Connect your Google account to participate in the real-time classmate scoreboard and save your academic stats.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => { audio.playClick(); onSignIn(); }}
-                    className="w-full py-2 px-3 rounded-xl bg-indigo-650 hover:bg-indigo-600 text-white font-bold text-[11px] transition cursor-pointer flex items-center justify-center gap-2 shadow"
-                  >
-                    <span>🔐 Connect with Google Auth</span>
-                  </button>
-                </div>
-              ) : (
-                <div>
-                  <p className="text-[11px] text-gray-400 leading-relaxed mb-3">
-                    Your statistics are synchronized with <span className="font-bold text-indigo-300">{user.email}</span>.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => { audio.playClick(); onSignOut(); }}
-                    className="w-full py-2 px-3 rounded-xl bg-rose-950/30 border border-rose-900/40 text-rose-400 hover:text-rose-300 hover:bg-rose-900/20 font-bold text-[11px] transition cursor-pointer"
-                  >
-                    Disconnect Google Account
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <div className="flex justify-center mb-6">
-              <div className="p-3 bg-slate-950 rounded-2xl border border-slate-800 text-center">
-                <img src={getAvatarUrl(tempUsername)} alt="Avatar" className="w-20 h-20 mx-auto rounded-xl mb-2" />
-                <span className="text-xs text-gray-400 uppercase font-mono">Dynamic Pixel Avatar</span>
+            {/* Dynamic Pixel Avatar */}
+            <div className="flex justify-center mb-5">
+              <div className="p-3 bg-slate-950 rounded-2xl border border-slate-800 text-center w-full max-w-[200px]">
+                <img src={getAvatarUrl(tempUsername)} alt="Avatar" className="w-16 h-16 mx-auto rounded-xl mb-2" />
+                <span className="text-[10px] text-gray-500 uppercase font-mono tracking-wider">Dynamic Pixel Avatar</span>
               </div>
             </div>
 
+            {/* Student Nickname input */}
             <div className="mb-4">
-              <label className="block text-xs font-semibold text-gray-400 mb-1.5 uppercase font-mono">Student Identifier</label>
+              <label className="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase font-mono tracking-wider">Student Identifier</label>
               <input
                 type="text"
                 value={tempUsername}
                 onChange={(e) => setTempUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, ""))}
                 placeholder="Student ID"
                 maxLength={18}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 font-mono transition"
+                className="w-full text-center bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 font-mono transition text-sm font-bold"
               />
-              <span className="text-[10px] text-gray-500 mt-1 block">A-Z, 0-9 and underscores allowed. Min 3 characters.</span>
+              <span className="text-[9px] text-gray-500 mt-1 block leading-normal">Letters, numbers, underscores. Min 3 characters.</span>
             </div>
 
-            <div className="flex gap-3 justify-end mt-6">
+            {/* Google Authentication & cloud connector card */}
+            <div className="mb-6 p-4 bg-slate-950/80 border border-indigo-950/60 rounded-xl">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[9px] font-bold text-indigo-400 uppercase font-mono tracking-wider">Cloud Connect State</span>
+                <span className={`text-[9px] font-mono font-black uppercase px-2 py-0.5 rounded-full ${user ? "bg-emerald-950/50 text-emerald-400 border border-emerald-900/30" : "bg-slate-900 text-gray-500"}`}>
+                  {user ? "Cloud Synced" : "Local Mode"}
+                </span>
+              </div>
+
+              {!user ? (
+                <div className="space-y-2">
+                  <p className="text-[10px] text-gray-400 leading-relaxed">
+                    Connect Google to join BSIT CLASSMATES SCOREBOARD & sync your XP progress.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => { audio.playClick(); onSignIn(); }}
+                    className="w-full py-2 px-3 rounded-xl bg-indigo-650 hover:bg-indigo-600 text-white font-extrabold text-[10px] transition cursor-pointer flex items-center justify-center gap-1.5 shadow-lg shadow-indigo-650/10"
+                  >
+                    <span>🔑 Log In / Register with Google</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-[10px] text-gray-400 leading-normal">
+                    Securely connected to: <span className="font-extrabold text-indigo-300 block font-mono truncate">{user.email}</span>
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => { audio.playClick(); onSignOut(); }}
+                    className="w-full py-2 px-3 rounded-xl bg-rose-950/40 border border-rose-900/40 text-rose-400 hover:text-rose-300 hover:bg-rose-900/30 font-bold text-[10px] transition cursor-pointer"
+                  >
+                    🚪 Disconnect & Log Out Account
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-2.5 justify-end">
               <button
                 onClick={() => setIsEditingProfile(false)}
-                className="px-4 py-2 rounded-xl text-gray-400 hover:text-white hover:bg-slate-800 transition text-sm font-medium"
+                className="px-4 py-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-slate-800 transition text-xs font-semibold"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSaveProfile}
                 disabled={tempUsername.trim().length < 3}
-                className="px-5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white transition text-sm font-semibold shadow disabled:opacity-50"
+                className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition text-xs font-bold shadow disabled:opacity-50 cursor-pointer"
               >
                 Save Details
               </button>
