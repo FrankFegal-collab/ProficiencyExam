@@ -46,7 +46,7 @@ service cloud.firestore {
       allow update: if isValidId(userId)
                     && isValidUserProfile(request.resource.data);
                     
-      allow delete: if false; // Profiles cannot be deleted from the client
+      allow delete: if userId.matches('^seed_comp_.*'); // Allow deletion of temporary seeded accounts
     }
   }
 }

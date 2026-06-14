@@ -169,6 +169,11 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       (snapshot) => {
         const uList: LeaderboardEntry[] = [];
         snapshot.forEach((docSnap) => {
+          // Instantly ignore/exclude seed competitors from client-side listing
+          if (docSnap.id.startsWith("seed_comp_")) {
+            return;
+          }
+
           const data = docSnap.data();
           const isUser = docSnap.id === studentUid;
           
