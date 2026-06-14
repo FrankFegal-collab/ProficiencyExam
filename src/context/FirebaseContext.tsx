@@ -198,9 +198,37 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
         uList.sort((a, b) => b.xp - a.xp);
 
         setOnlineLeaderboard(uList.slice(0, 30)); // Take top 30 classmates
+
+        // Auto-seed competitive classmate profiles in the live database if solo,
+        // so multiple real-time profiles are immediately visible and interactive!
+        const hasSeeded = localStorage.getItem("pit_bsit_leaderboard_seeded_v1");
+        if (snapshot.size <= 1 && !hasSeeded) {
+          localStorage.setItem("pit_bsit_leaderboard_seeded_v1", "true");
+          const currentDateStr = new Date().toISOString().split("T")[0];
+          const seedCompetitors = [
+            { id: "seed_comp_1", username: "BinaryBoss_PIT", xp: 1200, level: 44, streak: 15, lastActiveDate: currentDateStr, totalAnswered: 150, totalCorrect: 120, totalWrong: 30, survivalHighScore: 48, avatarId: "pixel_ninja" },
+            { id: "seed_comp_2", username: "Grace_Ada_Albay", xp: 1100, level: 38, streak: 12, lastActiveDate: currentDateStr, totalAnswered: 120, totalCorrect: 100, totalWrong: 20, survivalHighScore: 25, avatarId: "pixel_wizard" },
+            { id: "seed_comp_3", username: "PhpTabacoExpert", xp: 500, level: 32, streak: 10, lastActiveDate: currentDateStr, totalAnswered: 100, totalCorrect: 85, totalWrong: 15, survivalHighScore: 30, avatarId: "pixel_dev" },
+            { id: "seed_comp_4", username: "QueryQueen_Panal", xp: 800, level: 27, streak: 8, lastActiveDate: currentDateStr, totalAnswered: 80, totalCorrect: 68, totalWrong: 12, survivalHighScore: 18, avatarId: "pixel_geek" },
+            { id: "seed_comp_5", username: "NetWarrior_2026", xp: 800, level: 21, streak: 6, lastActiveDate: currentDateStr, totalAnswered: 60, totalCorrect: 50, totalWrong: 10, survivalHighScore: 15, avatarId: "pixel_robot" },
+            { id: "seed_comp_6", username: "Linus_Panal", xp: 200, level: 16, streak: 5, lastActiveDate: currentDateStr, totalAnswered: 45, totalCorrect: 38, totalWrong: 7, survivalHighScore: 13, avatarId: "pixel_knight" },
+            { id: "seed_comp_7", username: "WebDevWizard", xp: 600, level: 11, streak: 3, lastActiveDate: currentDateStr, totalAnswered: 30, totalCorrect: 25, totalWrong: 5, survivalHighScore: 10, avatarId: "pixel_astronaut" },
+            { id: "seed_comp_8", username: "FreshmanFox", xp: 900, level: 5, streak: 1, lastActiveDate: currentDateStr, totalAnswered: 15, totalCorrect: 11, totalWrong: 4, survivalHighScore: 6, avatarId: "pixel_cat" },
+            { id: "seed_comp_9", username: "NullPointer_Tab", xp: 450, level: 3, streak: 1, lastActiveDate: currentDateStr, totalAnswered: 10, totalCorrect: 7, totalWrong: 3, survivalHighScore: 4, avatarId: "pixel_dog" }
+          ];
+          seedCompetitors.forEach(async (comp) => {
+            const competitorRef = doc(db, "users", comp.id);
+            const { id, ...competitorPayload } = comp;
+            try {
+              await setDoc(competitorRef, competitorPayload);
+            } catch (err) {
+              console.error("Failed to seed competitor:", comp.username, err);
+            }
+          });
+        }
       },
       (error) => {
-        handleFirestoreError(error, OperationType.LIST, "users");
+        console.error("Firestore Leaderboard listen error (non-fatal): ", error);
       }
     );
 
