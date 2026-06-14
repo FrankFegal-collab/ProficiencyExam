@@ -25,6 +25,35 @@ interface QuizPlaygroundProps {
   onComplete: (session: GameSession) => void;
 }
 
+// Fisher-Yates high-entropy array shuffle algorithm
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+// Randomizes a question's multiple choice options and shifts correctAnswer index cleanly
+function shuffleQuestionChoices(q: Question): Question {
+  const choicesWithIndex = q.choices.map((choice, index) => ({
+    choice,
+    isCorrect: index === q.correctAnswer
+  }));
+
+  const shuffledChoices = shuffleArray(choicesWithIndex);
+
+  const newChoices = shuffledChoices.map(item => item.choice);
+  const newCorrectAnswerIndex = shuffledChoices.findIndex(item => item.isCorrect);
+
+  return {
+    ...q,
+    choices: newChoices,
+    correctAnswer: newCorrectAnswerIndex === -1 ? 0 : newCorrectAnswerIndex
+  };
+}
+
 export default function QuizPlayground({
   stats,
   onUpdateStats,
@@ -56,26 +85,32 @@ export default function QuizPlayground({
     let list: Question[] = [];
 
     if (mode === "SUBJECT") {
-      list = allQuestions.filter(q => q.subject === subjectFilter);
+      // High randomness subject quest sequence
+      const filtered = allQuestions.filter(q => q.subject === subjectFilter);
+      list = shuffleArray(filtered);
     } else if (mode === "QUICK") {
       // Shuffled random 10
-      const shuffled = [...allQuestions].sort(() => 0.5 - Math.random());
+      const shuffled = shuffleArray(allQuestions);
       list = shuffled.slice(0, 10);
     } else if (mode === "SURVIVAL") {
       // Endless randomized shuffling
-      list = [...allQuestions].sort(() => 0.5 - Math.random());
+      list = shuffleArray(allQuestions);
       setLives(3);
     } else if (mode === "EXAM") {
-      // Simulated entire exam: all 175 questions sorted or randomized
-      list = [...allQuestions].sort((a, b) => a.id - b.id);
+      // Simulated board exam with premium randomized sequence order
+      list = shuffleArray(allQuestions);
     } else if (mode === "DAILY") {
-      // Deterministic 10 questions for today
+      // Deterministic base selection then randomized question/choice sequence
       const todayNum = new Date().getDate();
       const startIndex = (todayNum * 7) % (allQuestions.length - 12);
-      list = allQuestions.slice(startIndex, startIndex + 10);
+      const dailyPool = allQuestions.slice(startIndex, startIndex + 10);
+      list = shuffleArray(dailyPool);
     }
 
-    setQuestions(list);
+    // Completely randomize multiple choice option layouts for all session questions
+    const randomizedQuestionsList = list.map(q => shuffleQuestionChoices(q));
+
+    setQuestions(randomizedQuestionsList);
     setCurrentIndex(0);
     setScore(0);
     setStreak(0);
