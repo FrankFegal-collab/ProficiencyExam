@@ -171,7 +171,7 @@ export default function Header({
             </div>
 
             {/* Student Nickname input */}
-            <div className="mb-4">
+            <div className="mb-6">
               <label className="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase font-mono tracking-wider">Student Identifier</label>
               <input
                 type="text"
@@ -179,47 +179,9 @@ export default function Header({
                 onChange={(e) => setTempUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, ""))}
                 placeholder="Student ID"
                 maxLength={18}
-                className="w-full text-center bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 font-mono transition text-sm font-bold"
+                className="w-full text-center bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 font-mono transition text-sm font-bold animate-pulse-subtle"
               />
-              <span className="text-[9px] text-gray-500 mt-1 block leading-normal">Letters, numbers, underscores. Min 3 characters.</span>
-            </div>
-
-            {/* Google Authentication & cloud connector card */}
-            <div className="mb-6 p-4 bg-slate-950/80 border border-indigo-950/60 rounded-xl">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[9px] font-bold text-indigo-400 uppercase font-mono tracking-wider">Cloud Connect State</span>
-                <span className={`text-[9px] font-mono font-black uppercase px-2 py-0.5 rounded-full ${user ? "bg-emerald-950/50 text-emerald-400 border border-emerald-900/30" : "bg-slate-900 text-gray-500"}`}>
-                  {user ? "Cloud Synced" : "Local Mode"}
-                </span>
-              </div>
-
-              {!user ? (
-                <div className="space-y-2">
-                  <p className="text-[10px] text-gray-400 leading-relaxed">
-                    Connect Google to join BSIT CLASSMATES SCOREBOARD & sync your XP progress.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => { audio.playClick(); onSignIn(); }}
-                    className="w-full py-2 px-3 rounded-xl bg-indigo-650 hover:bg-indigo-600 text-white font-extrabold text-[10px] transition cursor-pointer flex items-center justify-center gap-1.5 shadow-lg shadow-indigo-650/10"
-                  >
-                    <span>🔑 Log In / Register with Google</span>
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <p className="text-[10px] text-gray-400 leading-normal">
-                    Securely connected to: <span className="font-extrabold text-indigo-300 block font-mono truncate">{user.email}</span>
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => { audio.playClick(); onSignOut(); }}
-                    className="w-full py-2 px-3 rounded-xl bg-rose-950/40 border border-rose-900/40 text-rose-400 hover:text-rose-300 hover:bg-rose-900/30 font-bold text-[10px] transition cursor-pointer"
-                  >
-                    🚪 Disconnect & Log Out Account
-                  </button>
-                </div>
-              )}
+              <span className="text-[9px] text-gray-500 mt-1.5 block leading-normal">Letters, numbers, underscores. Min 3 characters.</span>
             </div>
 
             <div className="flex gap-2.5 justify-end">

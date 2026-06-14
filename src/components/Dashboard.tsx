@@ -5,7 +5,8 @@ import {
   generateWeaknessAnalysis,
   getXPNeededForLevel,
   getAvatarUrl,
-  getRankTitle
+  getRankTitle,
+  getLeaderboard
 } from "../utils/gameUtils";
 import { audio } from "../utils/audio";
 import {
@@ -376,81 +377,47 @@ export default function Dashboard({
                 <Trophy className="w-5 h-5 text-yellow-500 animate-pulse" />
                 <span className="text-sm font-extrabold text-white uppercase tracking-wider">Classmates Board</span>
               </div>
-              <span className="text-[9px] font-mono text-emerald-400 font-extrabold bg-emerald-950/20 border border-emerald-900/30 px-2.5 py-0.5 rounded-full uppercase">LIVE ONLINE</span>
+              <span className="text-[9px] font-mono text-amber-500 font-extrabold bg-amber-950/20 border border-amber-900/30 px-2.5 py-0.5 rounded-full uppercase">BSIT LEADERBOARD</span>
             </div>
 
-            {/* Online Scoreboard listing */}
-            {onlineLeaderboard && onlineLeaderboard.length > 0 ? (
-              <div className="flex flex-col gap-2 max-h-[280px] overflow-y-auto pr-1">
-                {onlineLeaderboard.map((e, index) => {
-                  const rank = index + 1;
-                  const isUser = e.isCurrentUser;
-                  let rankStyle = "bg-slate-950 text-gray-400";
-                  if (rank === 1) rankStyle = "bg-amber-500/20 text-yellow-300 border border-amber-500/30";
-                  if (rank === 2) rankStyle = "bg-slate-300/20 text-slate-300 border border-slate-300/20";
-                  if (rank === 3) rankStyle = "bg-amber-900/20 text-amber-500 border border-amber-900/20";
+            {/* Scoreboard listing */}
+            <div className="flex flex-col gap-2 max-h-[340px] overflow-y-auto pr-1">
+              {getLeaderboard(stats, "global", currentUsername).map((e, index) => {
+                const rank = index + 1;
+                const isUser = e.username === currentUsername;
+                let rankStyle = "bg-slate-950 text-gray-400";
+                if (rank === 1) rankStyle = "bg-amber-500/20 text-yellow-300 border border-amber-500/30";
+                if (rank === 2) rankStyle = "bg-slate-300/20 text-slate-300 border border-slate-300/20";
+                if (rank === 3) rankStyle = "bg-amber-900/20 text-amber-500 border border-amber-900/20";
 
-                  return (
-                    <div
-                      key={rank + "_" + e.username}
-                      className={`flex items-center justify-between p-2.5 rounded-xl transition ${isUser ? "bg-indigo-600/25 border border-indigo-500/40 shadow shadow-indigo-500/5 font-bold animate-pulse" : "bg-slate-950/40 border border-slate-950"}`}
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className={`w-6 h-6 rounded-lg ${rankStyle} flex items-center justify-center font-extrabold text-xs flex-shrink-0`}>
-                          {rank}
-                        </div>
-                        <img src={e.avatar} alt="Avatar" className="w-8 h-8 rounded-full border border-slate-800 flex-shrink-0" />
-                        <div className="min-w-0">
-                          <div className={`text-xs font-bold truncate ${isUser ? "text-indigo-200" : "text-gray-300"}`}>
-                            {e.username} {isUser && "👈"}
-                          </div>
-                          <div className="text-[10px] text-gray-500 font-mono">
-                            Lvl {e.level} • {getRankTitle(e.level).split(" ")[0]}
-                          </div>
-                        </div>
+                return (
+                  <div
+                    key={rank + "_" + e.username}
+                    className={`flex items-center justify-between p-2.5 rounded-xl transition ${isUser ? "bg-indigo-600/25 border border-indigo-500/40 shadow shadow-indigo-500/5 font-bold" : "bg-slate-950/40 border border-slate-950"}`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className={`w-6 h-6 rounded-lg ${rankStyle} flex items-center justify-center font-extrabold text-xs flex-shrink-0`}>
+                        {rank}
                       </div>
-
-                      <div className="text-right text-xs font-black font-mono text-gray-300">
-                        <span>{e.score || 0} XP</span>
+                      <img src={e.avatar} alt="Avatar" className="w-8 h-8 rounded-full border border-slate-800 flex-shrink-0" />
+                      <div className="min-w-0">
+                        <div className={`text-xs font-bold truncate ${isUser ? "text-indigo-200 animate-pulse" : "text-gray-300"}`}>
+                          {e.username} {isUser && "👈"}
+                        </div>
+                        <div className="text-[10px] text-gray-500 font-mono">
+                          Lvl {e.level} • {getRankTitle(e.level).split(" ")[0]}
+                        </div>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-8 px-4 text-center bg-slate-950/50 border border-slate-900 rounded-2xl">
-                <div className="p-3 bg-slate-950/80 text-gray-650 rounded-xl mb-3 border border-slate-900 animate-pulse">
-                  <Trophy className="w-5 h-5 text-indigo-400/40" />
-                </div>
-                <h4 className="text-xs font-extrabold text-white mb-1">Scoreboard Ready</h4>
-                {user ? (
-                  <p className="text-[10px] text-gray-500 leading-relaxed max-w-[220px]">
-                    You are connected as <span className="text-indigo-400 font-bold">{currentUsername}</span>! Complete quick reviews or exams to post the first score.
-                  </p>
-                ) : (
-                  <p className="text-[10px] text-gray-500 leading-relaxed max-w-[220px]">
-                    No classmate is active yet. Connect your Google account to register your student name!
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
 
-          {/* Quick Connect Google Registration Form CTA */}
-          {!user && (
-            <div className="mt-4 p-3 bg-slate-950/80 border border-indigo-950/60 rounded-2xl">
-              <span className="block text-[9px] font-bold text-indigo-400 uppercase font-mono tracking-wider mb-1">Classmate Registration Gateway</span>
-              <p className="text-[10px] text-gray-400 leading-relaxed mb-2">
-                Log in to link your progress, claim a student nickname, and showcase your rank on BSIT CLASSMATES SCOREBOARD.
-              </p>
-              <button
-                onClick={() => { audio.playClick(); onSignIn(); }}
-                className="w-full py-2 px-3 bg-indigo-650 hover:bg-indigo-600 active:scale-95 text-white font-bold text-[10px] rounded-xl flex items-center justify-center gap-2 transition cursor-pointer shadow-lg shadow-indigo-650/10"
-              >
-                <span>🔑 Log In / Register with Google Auth</span>
-              </button>
+                    <div className="text-right text-xs font-black font-mono text-indigo-400">
+                      <span>{e.xp || 0} XP</span>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          )}
+          </div>
         </div>
 
         {/* LOCKED/UNLOCKED ACHIEVEMENTS DISPLAY */}
