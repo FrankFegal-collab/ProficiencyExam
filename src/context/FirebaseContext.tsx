@@ -48,6 +48,8 @@ export function FirebaseProvider({ children, currentStats, onStatsLoaded }: {
 
         if (docSnap.exists()) {
           const cloudData = docSnap.data() as any;
+
+          // Perform a unified smart merge of local and cloud progress
           const fetchedStats: UserStats = {
             xp: cloudData.xp ?? 0,
             level: cloudData.level ?? 1,
@@ -57,10 +59,25 @@ export function FirebaseProvider({ children, currentStats, onStatsLoaded }: {
             totalCorrect: cloudData.totalCorrect ?? 0,
             totalWrong: cloudData.totalWrong ?? 0,
             subjectProgress: currentStats.subjectProgress,
-            unlockedBadges: cloudData.unlockedBadges ?? [],
-            survivalHighScore: cloudData.survivalHighScore ?? 0,
-            avatarId: cloudData.avatarId ?? "pixel_dev",
+            unlockedBadges: Array.from(new Set([
+              ...(currentStats.unlockedBadges || []),
+              ...(cloudData.unlockedBadges || [])
+            ])),
+            survivalHighScore: Math.max(currentStats.survivalHighScore ?? 0, cloudData.survivalHighScore ?? 0),
+            avatarId: cloudData.avatarId ?? currentStats.avatarId ?? "pixel_dev",
           };
+
+          // To provide a robust user experience and avoid overwriting newer local progress,
+          // compare levels and XP to determine if the local device has unsaved progress.
+          const localIsAhead = (currentStats.level > fetchedStats.level) || 
+                               (currentStats.level === fetchedStats.level && currentStats.xp > fetchedStats.xp);
+
+          const finalStats = localIsAhead ? {
+            ...currentStats,
+            unlockedBadges: fetchedStats.unlockedBadges,
+            survivalHighScore: fetchedStats.survivalHighScore,
+          } : fetchedStats;
+
           let loadedUsername = cloudData.username || localStorage.getItem("pit_bsit_student_username");
           if (!loadedUsername || loadedUsername === "enter nickname" || loadedUsername.trim() === "") {
             const randomHex = Math.random().toString(36).substring(2, 6).toUpperCase();
@@ -68,7 +85,7 @@ export function FirebaseProvider({ children, currentStats, onStatsLoaded }: {
             localStorage.setItem("pit_bsit_student_username", loadedUsername);
           }
           if (isSubscribed) {
-            onStatsLoaded(fetchedStats, loadedUsername);
+            onStatsLoaded(finalStats, loadedUsername);
           }
         } else {
           // Document doesn't exist, provision it with current local stats

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Header from "./components/Header";
 import Dashboard from "./components/Dashboard";
 import QuizPlayground from "./components/QuizPlayground";
@@ -21,20 +21,29 @@ export default function App() {
 
 function FirebaseProviderWrapper() {
   const [currentStats, setCurrentStats] = useState<UserStats>(() => getInitialStats());
-  const [statsLoadedHandler, setStatsLoadedHandler] = useState<((stats: UserStats, username: string) => void) | null>(null);
+  
+  // Store the actual loader callback in a ref to keep it completely stable across renders,
+  // preventing the surrounding FirebaseProvider and its useEffect from triggering multiple times.
+  const statsLoadedHandlerRef = useRef<((stats: UserStats, username: string) => void) | null>(null);
+
+  const handleStatsLoaded = useCallback((stats: UserStats, username: string) => {
+    if (statsLoadedHandlerRef.current) {
+      statsLoadedHandlerRef.current(stats, username);
+    }
+  }, []);
+
+  const registerStatsLoader = useCallback((handler: (stats: UserStats, username: string) => void) => {
+    statsLoadedHandlerRef.current = handler;
+  }, []);
 
   return (
     <FirebaseProvider
       currentStats={currentStats}
-      onStatsLoaded={(stats, username) => {
-        if (statsLoadedHandler) {
-          statsLoadedHandler(stats, username);
-        }
-      }}
+      onStatsLoaded={handleStatsLoaded}
     >
       <AppContent
         currentStats={currentStats}
-        registerStatsLoader={(handler) => setStatsLoadedHandler(() => handler)}
+        registerStatsLoader={registerStatsLoader}
       />
     </FirebaseProvider>
   );
@@ -58,6 +67,9 @@ function AppContent({ currentStats, registerStatsLoader }: {
     localStorage.setItem("pit_bsit_student_username", generatedName);
     return generatedName;
   });
+
+  // Flag to protect cloud records from being overwritten on boot with local stats.
+  const [hasLoadedFromCloud, setHasLoadedFromCloud] = useState(false);
 
   const [activeMode, setActiveMode] = useState<"LOBBY" | "SUBJECT" | "QUICK" | "SURVIVAL" | "EXAM" | "DAILY" | "RESULTS" | "STUDY" | "ADMIN">("LOBBY");
   const [selectedSubject, setSelectedSubject] = useState<string>("");
@@ -89,6 +101,7 @@ function AppContent({ currentStats, registerStatsLoader }: {
       setCurrentUsername(loadedUsername);
       saveUserStats(loadedStats);
       localStorage.setItem("pit_bsit_student_username", loadedUsername);
+      setHasLoadedFromCloud(true); // Flag that we have securely downloaded/merged cloud progress
     });
   }, [registerStatsLoader]);
 
@@ -114,17 +127,19 @@ function AppContent({ currentStats, registerStatsLoader }: {
       saveUserStats(defaultStats);
       setCurrentUsername("enter nickname");
       setActiveMode("LOBBY");
+      setHasLoadedFromCloud(false);
     } catch (err) {
       console.error("Failed to safely sign out user:", err);
     }
   };
 
-  // Synchronize local changes to Firestore if connected and fully loaded
+  // Synchronize local changes to Firestore if connected, fully loaded, and cloud load has occurred.
+  // This absolutely guarantees that we NEVER wipe out a user's cloud-accumulated XP/scores during initial boot.
   useEffect(() => {
-    if (user && !loading) {
+    if (user && !loading && hasLoadedFromCloud) {
       syncUserStatsToCloud(stats, currentUsername);
     }
-  }, [stats, currentUsername, user, loading, syncUserStatsToCloud]);
+  }, [stats, currentUsername, user, loading, hasLoadedFromCloud, syncUserStatsToCloud]);
 
   // Check if system query parameter is set to admin on boot
   useEffect(() => {
