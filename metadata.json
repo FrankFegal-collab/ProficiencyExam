@@ -1,0 +1,6 @@
+{
+  "name": "PIT BSIT Proficiency Quest",
+  "description": "A highly engaging multiple-choice reviewer game designed for PIT BSIT students preparing for the 2026 BSIT Proficiency Examination with achievements, leaderboards, and multiple game modes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

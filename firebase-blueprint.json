@@ -1,0 +1,27 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile with academic stats and XP",
+      "type": "object",
+      "properties": {
+        "username": { "type": "string", "description": "Student nickname" },
+        "xp": { "type": "number", "description": "Lifetime Experience points" },
+        "level": { "type": "number", "description": "BSIT Academic level" },
+        "streak": { "type": "number", "description": "Weekly day streak" },
+        "lastActiveDate": { "type": "string", "description": "Last active date YYYY-MM-DD" },
+        "totalAnswered": { "type": "number", "description": "Total questions answered" },
+        "totalCorrect": { "type": "number", "description": "Total answers that were correct" },
+        "totalWrong": { "type": "number", "description": "Total answers that were wrong" },
+        "survivalHighScore": { "type": "number", "description": "Survival mode high score" }
+      },
+      "required": ["username", "xp", "level", "streak", "lastActiveDate", "totalAnswered", "totalCorrect", "totalWrong", "survivalHighScore"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Store all statistics and achievements for a registered student user"
+    }
+  }
+}
