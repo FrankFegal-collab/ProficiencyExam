@@ -59,14 +59,25 @@ export function FirebaseProvider({ children, currentStats, onStatsLoaded }: {
             subjectProgress: currentStats.subjectProgress,
             unlockedBadges: cloudData.unlockedBadges ?? [],
             survivalHighScore: cloudData.survivalHighScore ?? 0,
+            avatarId: cloudData.avatarId ?? "pixel_dev",
           };
-          const loadedUsername = cloudData.username || localStorage.getItem("pit_bsit_student_username") || "enter nickname";
+          let loadedUsername = cloudData.username || localStorage.getItem("pit_bsit_student_username");
+          if (!loadedUsername || loadedUsername === "enter nickname" || loadedUsername.trim() === "") {
+            const randomHex = Math.random().toString(36).substring(2, 6).toUpperCase();
+            loadedUsername = `Classmate_${randomHex}`;
+            localStorage.setItem("pit_bsit_student_username", loadedUsername);
+          }
           if (isSubscribed) {
             onStatsLoaded(fetchedStats, loadedUsername);
           }
         } else {
           // Document doesn't exist, provision it with current local stats
-          const defaultName = localStorage.getItem("pit_bsit_student_username") || "enter nickname";
+          let defaultName = localStorage.getItem("pit_bsit_student_username");
+          if (!defaultName || defaultName === "enter nickname" || defaultName.trim() === "") {
+            const randomHex = Math.random().toString(36).substring(2, 6).toUpperCase();
+            defaultName = `Classmate_${randomHex}`;
+            localStorage.setItem("pit_bsit_student_username", defaultName);
+          }
           const payload = {
             username: defaultName.substring(0, 18),
             xp: currentStats.xp,
@@ -77,6 +88,7 @@ export function FirebaseProvider({ children, currentStats, onStatsLoaded }: {
             totalCorrect: currentStats.totalCorrect,
             totalWrong: currentStats.totalWrong,
             survivalHighScore: currentStats.survivalHighScore,
+            avatarId: currentStats.avatarId ?? "pixel_dev",
           };
           await setDoc(userDocRef, payload);
           if (isSubscribed) {
@@ -110,21 +122,19 @@ export function FirebaseProvider({ children, currentStats, onStatsLoaded }: {
           const data = docSnap.data();
           const isUser = docSnap.id === studentUid;
           
-          // Only show classmates who have entered their exact custom nicknames, 
-          // or always include the current guest user so they see themselves.
-          const username = data.username || "Anonymous";
-          const isDefaultName = username === "enter nickname" || username.trim() === "";
-
-          if (isUser || !isDefaultName) {
-            uList.push({
-              username: username,
-              avatar: getAvatarUrl(username),
-              level: data.level || 1,
-              xp: data.xp || 0,
-              score: data.xp || 0,
-              isCurrentUser: isUser,
-            });
+          let username = data.username || "Anonymous Classmate";
+          if (username === "enter nickname" || username.trim() === "") {
+            username = "Anonymous Classmate";
           }
+
+          uList.push({
+            username: username,
+            avatar: getAvatarUrl(username, data.avatarId),
+            level: data.level || 1,
+            xp: data.xp || 0,
+            score: data.xp || 0,
+            isCurrentUser: isUser,
+          });
         });
         setOnlineLeaderboard(uList);
       },
@@ -157,6 +167,7 @@ export function FirebaseProvider({ children, currentStats, onStatsLoaded }: {
         totalCorrect: stats.totalCorrect,
         totalWrong: stats.totalWrong,
         survivalHighScore: stats.survivalHighScore,
+        avatarId: stats.avatarId ?? "pixel_dev",
       };
       await setDoc(userDocRef, payload, { merge: true });
     } catch (error) {

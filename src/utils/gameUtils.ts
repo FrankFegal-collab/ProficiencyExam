@@ -37,7 +37,8 @@ export function getInitialStats(): UserStats {
     totalWrong: 0,
     subjectProgress: {},
     unlockedBadges: [],
-    survivalHighScore: 0
+    survivalHighScore: 0,
+    avatarId: "pixel_dev"
   };
 
   localStorage.setItem("pit_bsit_user_stats", JSON.stringify(defaultStats));
@@ -116,7 +117,24 @@ export function checkAchievements(stats: UserStats, scoreCombo: number, lastSubj
   return { stats: updated, newlyUnlocked };
 }
 
-export function getAvatarUrl(username: string): string {
+export const PREDEFINED_AVATARS = [
+  { id: "pixel_dev", name: "Pixel Dev", url: "https://api.dicebear.com/7.x/pixel-art/svg?seed=PixelDev&backgroundColor=b6e3f4" },
+  { id: "pixel_geek", name: "Pixel Geek", url: "https://api.dicebear.com/7.x/pixel-art/svg?seed=PixelGeek&backgroundColor=c0aede" },
+  { id: "pixel_cat", name: "Pixel Cat", url: "https://api.dicebear.com/7.x/pixel-art/svg?seed=PixelCat&backgroundColor=d1f4c9" },
+  { id: "pixel_dog", name: "Pixel Dog", url: "https://api.dicebear.com/7.x/pixel-art/svg?seed=PixelDog&backgroundColor=ffdfd3" },
+  { id: "pixel_ninja", name: "Pixel Ninja", url: "https://api.dicebear.com/7.x/pixel-art/svg?seed=PixelNinja&backgroundColor=b3e5fc" },
+  { id: "pixel_knight", name: "Pixel Knight", url: "https://api.dicebear.com/7.x/pixel-art/svg?seed=PixelKnight&backgroundColor=ffecb3" },
+  { id: "pixel_wizard", name: "Pixel Wizard", url: "https://api.dicebear.com/7.x/pixel-art/svg?seed=PixelWizard&backgroundColor=d1c4e9" },
+  { id: "pixel_alien", name: "Pixel Alien", url: "https://api.dicebear.com/7.x/pixel-art/svg?seed=PixelAlien&backgroundColor=c8e6c9" },
+  { id: "pixel_robot", name: "Pixel Robot", url: "https://api.dicebear.com/7.x/pixel-art/svg?seed=PixelRobot&backgroundColor=f0f4c3" },
+  { id: "pixel_astronaut", name: "Pixel Astronaut", url: "https://api.dicebear.com/7.x/pixel-art/svg?seed=PixelAstronaut&backgroundColor=ffe0b2" },
+];
+
+export function getAvatarUrl(username: string, avatarId?: string): string {
+  if (avatarId) {
+    const selected = PREDEFINED_AVATARS.find(a => a.id === avatarId);
+    if (selected) return selected.url;
+  }
   return `https://api.dicebear.com/7.x/pixel-art/svg?seed=${encodeURIComponent(username)}`;
 }
 
@@ -143,7 +161,7 @@ export function getLeaderboard(userStats: UserStats, type: "global" | "subject" 
   // Add the user to the board
   const userEntry: LeaderboardEntry = {
     username: currentUsername || "You",
-    avatar: getAvatarUrl(currentUsername || "You"),
+    avatar: getAvatarUrl(currentUsername || "You", userStats.avatarId),
     level: userStats.level,
     xp: userTotalXP,
     isCurrentUser: true

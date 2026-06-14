@@ -44,14 +44,19 @@ function AppContent({ currentStats, registerStatsLoader }: {
   currentStats: UserStats;
   registerStatsLoader: (handler: (stats: UserStats, username: string) => void) => void;
 }) {
-  const { user, signInWithGoogle, logout, onlineLeaderboard, syncUserStatsToCloud } = useFirebase();
+  const { user, loading, signInWithGoogle, logout, onlineLeaderboard, syncUserStatsToCloud } = useFirebase();
 
   // Global States
   const [stats, setStats] = useState<UserStats>(currentStats);
   const [currentUsername, setCurrentUsername] = useState<string>(() => {
-    const emailPrefix = "enter nickname";
     const cached = localStorage.getItem("pit_bsit_student_username");
-    return cached || emailPrefix;
+    if (cached && cached !== "enter nickname" && cached.trim() !== "") {
+      return cached;
+    }
+    const randomHex = Math.random().toString(36).substring(2, 6).toUpperCase();
+    const generatedName = `Classmate_${randomHex}`;
+    localStorage.setItem("pit_bsit_student_username", generatedName);
+    return generatedName;
   });
 
   const [activeMode, setActiveMode] = useState<"LOBBY" | "SUBJECT" | "QUICK" | "SURVIVAL" | "EXAM" | "DAILY" | "RESULTS" | "STUDY" | "ADMIN">("LOBBY");
@@ -114,12 +119,12 @@ function AppContent({ currentStats, registerStatsLoader }: {
     }
   };
 
-  // Synchronize local changes to Firestore if connected
+  // Synchronize local changes to Firestore if connected and fully loaded
   useEffect(() => {
-    if (user) {
+    if (user && !loading) {
       syncUserStatsToCloud(stats, currentUsername);
     }
-  }, [stats, currentUsername, user, syncUserStatsToCloud]);
+  }, [stats, currentUsername, user, loading, syncUserStatsToCloud]);
 
   // Check if system query parameter is set to admin on boot
   useEffect(() => {
@@ -142,9 +147,16 @@ function AppContent({ currentStats, registerStatsLoader }: {
     }
   };
 
-  const handleUsernameChange = (newNick: string) => {
+  const handleUsernameChange = (newNick: string, newAvatarId?: string) => {
     setCurrentUsername(newNick);
     localStorage.setItem("pit_bsit_student_username", newNick);
+    if (newAvatarId) {
+      setStats((prev) => {
+        const nextStats = { ...prev, avatarId: newAvatarId };
+        saveUserStats(nextStats);
+        return nextStats;
+      });
+    }
   };
 
   const handleResetProgressAll = () => {
@@ -162,7 +174,8 @@ function AppContent({ currentStats, registerStatsLoader }: {
       totalWrong: 0,
       subjectProgress: {},
       unlockedBadges: [],
-      survivalHighScore: 0
+      survivalHighScore: 0,
+      avatarId: "pixel_dev"
     };
     
     setStats(defaultStats);

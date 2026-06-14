@@ -26,6 +26,7 @@ export interface UserStats {
   unlockedBadges: string[];
   dailyChallengeDoneDate?: string; // YYYY-MM-DD
   survivalHighScore: number;
+  avatarId?: string;
 }
 
 export interface Achievement {

@@ -21,8 +21,8 @@ service cloud.firestore {
     }
 
     function isValidUserProfile(data) {
-      return data.keys().hasAll(['username', 'xp', 'level', 'streak', 'lastActiveDate', 'totalAnswered', 'totalCorrect', 'totalWrong', 'survivalHighScore']) 
-             && data.keys().size() == 9
+      return data.keys().hasAll(['username', 'xp', 'level', 'streak', 'lastActiveDate', 'totalAnswered', 'totalCorrect', 'totalWrong', 'survivalHighScore', 'avatarId']) 
+             && data.keys().size() == 10
              && data.username is string && data.username.size() >= 3 && data.username.size() <= 32
              && data.xp is int && data.xp >= 0
              && data.level is int && data.level >= 1
@@ -31,7 +31,8 @@ service cloud.firestore {
              && data.totalAnswered is int && data.totalAnswered >= 0
              && data.totalCorrect is int && data.totalCorrect >= 0
              && data.totalWrong is int && data.totalWrong >= 0
-             && data.survivalHighScore is int && data.survivalHighScore >= 0;
+             && data.survivalHighScore is int && data.survivalHighScore >= 0
+             && data.avatarId is string && data.avatarId.size() <= 128;
     }
 
     // Match rules for the users collection

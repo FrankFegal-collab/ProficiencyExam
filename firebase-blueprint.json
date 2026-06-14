@@ -13,9 +13,10 @@
         "totalAnswered": { "type": "number", "description": "Total questions answered" },
         "totalCorrect": { "type": "number", "description": "Total answers that were correct" },
         "totalWrong": { "type": "number", "description": "Total answers that were wrong" },
-        "survivalHighScore": { "type": "number", "description": "Survival mode high score" }
+        "survivalHighScore": { "type": "number", "description": "Survival mode high score" },
+        "avatarId": { "type": "string", "description": "Student selected avatar identifier" }
       },
-      "required": ["username", "xp", "level", "streak", "lastActiveDate", "totalAnswered", "totalCorrect", "totalWrong", "survivalHighScore"]
+      "required": ["username", "xp", "level", "streak", "lastActiveDate", "totalAnswered", "totalCorrect", "totalWrong", "survivalHighScore", "avatarId"]
     }
   },
   "firestore": {

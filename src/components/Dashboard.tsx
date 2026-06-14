@@ -313,7 +313,7 @@ export default function Dashboard({
         <div id="student_badge" className="bg-slate-900/40 border border-blue-900/10 rounded-3xl p-5 text-center relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-amber-500"></div>
           <img
-            src={getAvatarUrl(currentUsername)}
+            src={getAvatarUrl(currentUsername, stats.avatarId)}
             alt="User Avatar"
             className="w-20 h-20 rounded-2xl mx-auto mb-3 shadow-md border border-slate-700 bg-slate-950"
           />
@@ -385,7 +385,7 @@ export default function Dashboard({
                 ? [...onlineLeaderboard].sort((a, b) => b.xp - a.xp)
                 : [{
                     username: currentUsername,
-                    avatar: getAvatarUrl(currentUsername),
+                    avatar: getAvatarUrl(currentUsername, stats.avatarId),
                     level: stats.level,
                     xp: stats.xp,
                     isCurrentUser: true

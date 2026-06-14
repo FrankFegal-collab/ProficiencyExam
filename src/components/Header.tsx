@@ -1,5 +1,5 @@
 import { UserStats } from "../types";
-import { getRankTitle, getXPNeededForLevel, getAvatarUrl } from "../utils/gameUtils";
+import { getRankTitle, getXPNeededForLevel, getAvatarUrl, PREDEFINED_AVATARS } from "../utils/gameUtils";
 import { audio } from "../utils/audio";
 import { Trophy, Volume2, VolumeX, RefreshCw, User as UserIcon, Flame, Award, ShieldAlert } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -7,7 +7,7 @@ import { useState, useEffect } from "react";
 interface HeaderProps {
   stats: UserStats;
   currentUsername: string;
-  onUsernameChange: (name: string) => void;
+  onUsernameChange: (name: string, avatarId?: string) => void;
   onResetStats: () => void;
   setMode: (mode: any) => void;
   user: any;
@@ -27,12 +27,14 @@ export default function Header({
 }: HeaderProps) {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [tempUsername, setTempUsername] = useState(currentUsername);
+  const [selectedAvatarId, setSelectedAvatarId] = useState(stats.avatarId || "pixel_dev");
   const [isMuted, setIsMuted] = useState(audio.getMuted());
 
   // Synchronize dynamic input name when parent changes or modal opens
   useEffect(() => {
     setTempUsername(currentUsername);
-  }, [currentUsername, isEditingProfile]);
+    setSelectedAvatarId(stats.avatarId || "pixel_dev");
+  }, [currentUsername, stats.avatarId, isEditingProfile]);
 
   const xpNeeded = getXPNeededForLevel(stats.level);
   const xpPercent = Math.min(100, Math.round((stats.xp / xpNeeded) * 100));
@@ -45,7 +47,7 @@ export default function Header({
 
   const handleSaveProfile = () => {
     if (tempUsername.trim().length >= 3) {
-      onUsernameChange(tempUsername.trim());
+      onUsernameChange(tempUsername.trim(), selectedAvatarId);
       setIsEditingProfile(false);
       audio.playCorrect();
     }
@@ -136,7 +138,7 @@ export default function Header({
             onClick={() => setIsEditingProfile(true)}
             className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900 hover:bg-indigo-950/40 hover:border-indigo-800/40 border border-slate-800 text-gray-300 hover:text-white transition cursor-pointer"
           >
-            <img src={getAvatarUrl(currentUsername)} alt={currentUsername} className="w-6 h-6 rounded-full" />
+            <img src={getAvatarUrl(currentUsername, stats.avatarId)} alt={currentUsername} className="w-6 h-6 rounded-full" />
             <span className="text-sm font-medium">{currentUsername}</span>
           </button>
 
@@ -165,8 +167,41 @@ export default function Header({
             {/* Dynamic Pixel Avatar */}
             <div className="flex justify-center mb-5">
               <div className="p-3 bg-slate-950 rounded-2xl border border-slate-800 text-center w-full max-w-[200px]">
-                <img src={getAvatarUrl(tempUsername)} alt="Avatar" className="w-16 h-16 mx-auto rounded-xl mb-2" />
-                <span className="text-[10px] text-gray-500 uppercase font-mono tracking-wider">Dynamic Pixel Avatar</span>
+                <img src={getAvatarUrl(tempUsername, selectedAvatarId)} alt="Avatar" className="w-16 h-16 mx-auto rounded-xl mb-2" />
+                <span className="text-[10px] text-gray-500 uppercase font-mono tracking-wider font-semibold text-slate-400">Selected Avatar Preview</span>
+              </div>
+            </div>
+
+            {/* Avatar Selection Grid */}
+            <div className="mb-5">
+              <label className="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase font-mono tracking-wider">Select Predefined Avatar</label>
+              <div className="grid grid-cols-5 gap-2 max-h-36 overflow-y-auto p-2 bg-slate-950 rounded-xl border border-slate-800 scrollbar-thin">
+                {PREDEFINED_AVATARS.map((avatar) => {
+                  const isSelected = selectedAvatarId === avatar.id;
+                  return (
+                    <button
+                      key={avatar.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedAvatarId(avatar.id);
+                        audio.playClick();
+                      }}
+                      title={avatar.name}
+                      className={`relative p-1.5 rounded-lg border transition-all hover:scale-105 active:scale-95 ${
+                        isSelected
+                          ? "bg-slate-900 border-indigo-500 ring-2 ring-indigo-500/20"
+                          : "bg-slate-950 border-slate-800 hover:border-slate-700 hover:bg-slate-900/40"
+                      }`}
+                    >
+                      <img src={avatar.url} alt={avatar.name} className="w-8 h-8 mx-auto rounded-md" />
+                      {isSelected && (
+                        <span className="absolute -top-1 -right-1 text-[8px] bg-indigo-500 text-white rounded-full w-3.5 h-3.5 flex items-center justify-center font-bold">
+                          ✓
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
