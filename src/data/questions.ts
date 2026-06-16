@@ -716,351 +716,351 @@ export const QUESTIONS: Question[] = [
     id: 51,
     subject: "Web Systems and Technologies",
     difficulty: "Easy",
-    question: "Which HTML5 layout container acts as an administrative metadata vault that holds styles and scripts but does not render inside the main browser viewport?",
+    question: "Which HTML elements are used to define text headlines, and which represents the absolute largest tier of headings?",
     choices: [
-      "<body>",
-      "<html>",
-      "<head>",
-      "<section>"
+      "<h1> through <h6>, with <h6> being the largest",
+      "<p> through <h6>, with <p> being the largest",
+      "<h1> through <h6>, with <h1> being the largest",
+      "<header> and <footer>, with <header> being the largest"
     ],
     correctAnswer: 2,
-    explanation: "The <head> element contains head data (metadata, encodings, titles, CSS paths) that remains invisible to users in the active canvas."
+    explanation: "According to the sheet, <h1> through <h6> define text headings, where <h1> represents the absolute largest tier."
   },
   {
     id: 52,
     subject: "Web Systems and Technologies",
     difficulty: "Easy",
-    question: "Which of the following represents the highest structural hierarchy level in HTML5 headings?",
+    question: "Which HTML tag is used to create hyperlinks, and through which attribute is the destination URL specified?",
     choices: [
-      "<h6>",
-      "<h0>",
-      "<h1>",
-      "<heading>"
+      "<link> tag and its src attribute",
+      "<a> (anchor) tag and its href attribute",
+      "<href> tag and its url attribute",
+      "<a> (anchor) tag and its link attribute"
     ],
-    correctAnswer: 2,
-    explanation: "Headings scale down systematically from <h1> (highest, critical semantic title) down to <h6> (lowest structural subtopic)."
+    correctAnswer: 1,
+    explanation: "The <a> (anchor) tag creates hyperlinks via its href attribute."
   },
   {
     id: 53,
     subject: "Web Systems and Technologies",
-    difficulty: "Medium",
-    question: "What is the primary role of the semantic 'alt' attribute on an image markup tag?",
+    difficulty: "Easy",
+    question: "Which HTML structural container contains document metadata, styles, links, and titles that do not render in the visible viewport?",
     choices: [
-      "To define floating coordinates",
-      "To establish alternative width levels",
-      "To provide alternative description text for accessibility fallback and broken image cases",
-      "To cache the image file path"
+      "<body>",
+      "<html>",
+      "<head>",
+      "<metadata>"
     ],
     correctAnswer: 2,
-    explanation: "The 'alt' attribute displays descriptive text if an image fails to load and assists screen readers for web accessibility."
+    explanation: "The <head> contains metadata, styles, links, and document titles that do not render in the visible viewport."
   },
   {
     id: 54,
     subject: "Web Systems and Technologies",
     difficulty: "Easy",
-    question: "Which HTML5 anchor syntax configuration is correct for creating functional hyperlinks?",
+    question: "Which HTML structural element holds all of the visible content of a web page?",
     choices: [
-      "<a src=\"URL\">Link</a>",
-      "<a href=\"URL\">Link</a>",
-      "<link target=\"URL\">Link</link>",
-      "<anchor path=\"URL\">Link</anchor>"
+      "<head>",
+      "<body>",
+      "<main>",
+      "<content>"
     ],
     correctAnswer: 1,
-    explanation: "The <a> element relies specifically on the 'href' (hypertext reference) attribute to store destination URL layers."
+    explanation: "The <body> holds all visible content of an HTML document."
   },
   {
     id: 55,
     subject: "Web Systems and Technologies",
-    difficulty: "Medium",
-    question: "Which semantic HTML5 element represents an independent, self-contained layout container meant for syndication (e.g., blog post or product entry)?",
+    difficulty: "Easy",
+    question: "Which structural combination of elements is used to create unordered list, ordered list, and individual list items?",
     choices: [
-      "`<section>`",
-      "`<article>`",
-      "`<aside>`",
-      "`<nav>`"
+      "<ul> for unordered list, <ol> for ordered list, and <li> for individual list items",
+      "<ol> for unordered list, <ul> for ordered list, and <item> for individual list items",
+      "<list> for unordered list, <numlist> for ordered list, and <li> for individual list items",
+      "<bullet> for unordered list, <number> for ordered list, and <list> for individual list items"
     ],
-    correctAnswer: 1,
-    explanation: "The `<article>` tag encapsulates components designed to behave independently of the general page context."
+    correctAnswer: 0,
+    explanation: "According to the sheet, <ul> creates an unordered (bulleted) list; <ol> creates an ordered (numbered) list; <li> defines individual list items."
   },
   {
     id: 56,
     subject: "Web Systems and Technologies",
     difficulty: "Easy",
-    question: "Which element specifically represents a group of links targeted for main site navigation blocks?",
+    question: "In HTML tables, which elements are used to define a table row, table data cells, and table header cells respectively?",
     choices: [
-      "`<aside>`",
-      "`<nav>`",
-      "`<section>`",
-      "`<header>`"
+      "<tr> for rows, <th> for data cells, and <td> for header cells",
+      "<row> for rows, <td> for data cells, and <head> for header cells",
+      "<tr> for rows, <td> for data cells, and <th> for header cells",
+      "<thead> for rows, <tbody> for data cells, and <tfoot> for header cells"
     ],
-    correctAnswer: 1,
-    explanation: "The `<nav>` semantic container defines primary blocks containing active navigational anchors."
+    correctAnswer: 2,
+    explanation: "<tr> defines a table row, <td> table data cells, and <th> table header cells."
   },
   {
     id: 57,
     subject: "Web Systems and Technologies",
-    difficulty: "Medium",
-    question: "Which attribute sets the specific data expected in an input tag (e.g., text, password, email)?",
+    difficulty: "Easy",
+    question: "What HTML tag is used to display images, and what attribute provides alternative descriptive text if the asset fails to render?",
     choices: [
-      "name",
-      "type",
-      "placeholder",
-      "action"
+      "<picture> tag with title attribute",
+      "<img> tag with alt attribute",
+      "<image> tag with src attribute",
+      "<img> tag with desc attribute"
     ],
     correctAnswer: 1,
-    explanation: "The 'type' attribute tailors input text spaces to specific validation forms like 'text', 'password', or 'email'."
+    explanation: "According to the sheet, <img> displays images; its mandatory alt attribute provides alternative descriptive text if the asset fails to render."
   },
   {
     id: 58,
     subject: "Web Systems and Technologies",
-    difficulty: "Medium",
-    question: "What HTML pairing links form input boxes and text labels securely to enhance accessibility?",
+    difficulty: "Easy",
+    question: "In an HTML form, which attribute is used to define the destination URL route where data is sent upon submission?",
     choices: [
-      "Matching `<label for=\"id\">` with input's `id`",
-      "Matching name attributes",
-      "Using identical text contents",
-      "Nesting input tags inside main anchor lines"
+      "method",
+      "route",
+      "action",
+      "target"
     ],
-    correctAnswer: 0,
-    explanation: "Linking labels and inputs matches the 'for' attribute of the label directly with the unique ID of the target input."
+    correctAnswer: 2,
+    explanation: "The <form> uses the action attribute to define the destination URL route where data is sent upon submission."
   },
   {
     id: 59,
     subject: "Web Systems and Technologies",
-    difficulty: "Hard",
-    question: "Determine the correct specificity weight order of CSS selectors, from highest weight down to lowest weight.",
+    difficulty: "Easy",
+    question: "What is the primary role of Cascading Style Sheets (CSS)?",
     choices: [
-      "Class -> ID -> Inline -> Element",
-      "Inline Styles -> Unique ID (#idValue) -> Class selectors (.className) -> Type/Element tags (e.g., p)",
-      "Element -> Class -> ID -> Inline",
-      "Universal selector -> Element -> ID -> Inline"
+      "To manage server-side logic and connect to databases",
+      "To structure raw document text into semantic headings",
+      "To handle presentation layout of the document",
+      "To authenticate user inputs and validate emails"
     ],
-    correctAnswer: 1,
-    explanation: "CSS Specificity ranks weight levels: first Inline layout, next Unique IDs (#id), then Class names (.class), and lastly basic Element tags (p)."
+    correctAnswer: 2,
+    explanation: "According to the sheet, Cascading Style Sheets handle presentation layout."
   },
   {
     id: 60,
     subject: "Web Systems and Technologies",
     difficulty: "Medium",
-    question: "In the Concentric Box Model, list the layout layers in order from innermost to outermost space.",
+    question: "In CSS, how are inline style rules written, and what is their specificity weight compared to external stylesheet rules?",
     choices: [
-      "Content -> Margin -> Padding -> Border",
-      "Content Boundary -> Padding Region -> Border Line -> Margin Buffer Space",
-      "Border -> Padding -> Content -> Margin",
-      "Margin -> Border -> Padding -> Content"
+      "Written outside HTML using class selectors; they have equal specificity",
+      "Written directly inside an opening HTML tag using the style attribute; they have a higher specificity weight and override conflicting external stylesheet rules",
+      "Written inside a <style> block in the head; they have lower specificity weight",
+      "Written directly inside the body; they are always overridden by external rules"
     ],
     correctAnswer: 1,
-    explanation: "The box model nests concentrically: raw Content in the center, next Padding spacing, the Border line, and lastly the external Margin gap."
+    explanation: "According to the sheet, inline style rules are written directly inside an opening HTML tag using the style attribute (e.g., <p style=\"color: red;\">). Inline styles have a higher specificity weight and override conflicting external stylesheet rules."
   },
   {
     id: 61,
     subject: "Web Systems and Technologies",
-    difficulty: "Hard",
-    question: "Under clockwise shorthand rules, parse the following values: padding: 10px 5px 15px 20px;",
+    difficulty: "Easy",
+    question: "Which CSS selector targets elements containing a specific class attribute?",
     choices: [
-      "Top: 10px, Left: 5px, Bottom: 15px, Right: 20px",
-      "Top: 10px, Right: 5px, Bottom: 15px, Left: 20px",
-      "Bottom: 10px, Right: 5px, Top: 15px, Left: 20px",
-      "Left: 10px, Top: 5px, Right: 15px, Bottom: 20px"
+      "#classname",
+      "*classname",
+      "@classname",
+      ".classname"
     ],
-    correctAnswer: 1,
-    explanation: "CSS clockwise margins/paddings order: Top (10px), Right (5px), Bottom (15px), and lastly Left (20px)."
+    correctAnswer: 3,
+    explanation: "According to the selector definitions, .classname targets elements containing that specific class attribute."
   },
   {
     id: 62,
     subject: "Web Systems and Technologies",
     difficulty: "Easy",
-    question: "Which CSS Flexbox alignment property controls distribution of elements along the main axis?",
+    question: "Which CSS selector targets a single element with a matching unique id attribute?",
     choices: [
-      "align-items",
-      "justify-content",
-      "flex-direction",
-      "grid-template-areas"
+      ".idvalue",
+      "#idvalue",
+      "@idvalue",
+      "id(idvalue)"
     ],
     correctAnswer: 1,
-    explanation: "The 'justify-content' property aligns flex items along the primary main axis (horizontal by default)."
+    explanation: "According to the selector definitions, #idvalue targets a single element with a matching unique id attribute."
   },
   {
     id: 63,
     subject: "Web Systems and Technologies",
-    difficulty: "Easy",
-    question: "Which CSS Flexbox alignment property regulates element centering across the secondary cross-axis?",
+    difficulty: "Medium",
+    question: "According to the CSS Box Model, what are the layers wrapping content ordered from inside to outside?",
     choices: [
-      "justify-content",
-      "align-items",
-      "gap-distribution",
-      "flex-wrap"
+      "Content -> Border -> Padding -> Margin",
+      "Content -> Margin -> Padding -> Border",
+      "Content -> Padding -> Border -> Margin",
+      "Margin -> Border -> Padding -> Content"
     ],
-    correctAnswer: 1,
-    explanation: "The 'align-items' property manages styling along the perpendicular cross-axis (vertical by default)."
+    correctAnswer: 2,
+    explanation: "The CSS Box Model is composed of layers wrapping content, ordered from inside to outside: Content -> Padding -> Border -> Margin."
   },
   {
     id: 64,
     subject: "Web Systems and Technologies",
     difficulty: "Medium",
-    question: "What does the 'fr' unit stand for in the CSS Grid Layout framework?",
+    question: "Where does CSS padding sit in relation to the content area and the border line?",
     choices: [
-      "Fixed Resolution",
-      "Fractional Space",
-      "Font Reference",
-      "Fluid Row"
+      "Padding directly surrounds the content area and sits inside the border line",
+      "Padding surrounds the border line and sits outside the margin",
+      "Padding sits outside the margin and does not surround the content area",
+      "Padding directly surrounds the margin line and sits inside the content area"
     ],
-    correctAnswer: 1,
-    explanation: "The 'fr' unit represents a fraction of the remaining free space in the grid container."
+    correctAnswer: 0,
+    explanation: "According to the CSS Box Model, Padding directly surrounds the content area and sits inside the border line."
   },
   {
     id: 65,
     subject: "Web Systems and Technologies",
-    difficulty: "Hard",
-    question: "Which CSS layout system is explicitly defined as a specialized one-dimensional design tool relative to two-dimensional grid layouts?",
+    difficulty: "Medium",
+    question: "Which sequence/direction does the CSS margin shorthand property define layout spacing around the outer border perimeter?",
     choices: [
-      "CSS Table System",
-      "CSS Grid Layout",
-      "CSS Flexbox Blueprint",
-      "Inline Float Blocks"
+      "Counter-clockwise starting from Top: Top, Left, Bottom, Right",
+      "Clockwise sequence: Top, Right, Bottom, Left",
+      "From inside out: Left, Right, Top, Bottom",
+      "X and Y axis: Left-Right first, then Top-Bottom"
     ],
-    correctAnswer: 2,
-    explanation: "Flexbox specializes in aligning elements along a single dimensional flow, whereas Grid controls horizontal and vertical axes simultaneously."
+    correctAnswer: 1,
+    explanation: "According to the sheet, Margin defines shorthand layout spacing around the outer border perimeter in a clockwise sequence: Top, Right, Bottom, Left."
   },
   {
     id: 66,
     subject: "Web Systems and Technologies",
-    difficulty: "Easy",
-    question: "What is the primary visible canvas container in any web document?",
+    difficulty: "Medium",
+    question: "If you define a CSS rule as 'margin: 10px 20px 5px 15px;', what is the resulting spacing applied to the left margin?",
     choices: [
-      "<head>",
-      "<body>",
-      "<html>",
-      "<footer>"
+      "10px",
+      "20px",
+      "5px",
+      "15px"
     ],
-    correctAnswer: 1,
-    explanation: "The `<body>` houses all structural elements (text, graphics, tables) rendered on screen for users."
+    correctAnswer: 3,
+    explanation: "Shorthand margin layout spacing follows the clockwise sequence (Top, Right, Bottom, Left). Thus, 'margin: 10px 20px 5px 15px;' gives a left margin of 15px."
   },
   {
     id: 67,
     subject: "Web Systems and Technologies",
-    difficulty: "Medium",
-    question: "Which elements are designated semantic section indicators in HTML5 layout designs?",
+    difficulty: "Easy",
+    question: "Which CSS properties are used to modify backgrounds and scale text rendering respectively?",
     choices: [
-      "`<div>` and `<span>`",
-      "`<header>`, `<main>`, `<section>`, `<article>`, `<aside>`, `<footer>`",
-      "`<table>` and `<form>`",
-      "`<style>` and `<script>`"
+      "background-color and font-size",
+      "fill-color and text-scale",
+      "bg-color and font-weight",
+      "color-background and size-font"
     ],
-    correctAnswer: 1,
-    explanation: "Semantic layout components explicitly describe their contents' role to browsers and search systems."
+    correctAnswer: 0,
+    explanation: "According to the sheet properties: background-color modifies backgrounds, and font-size handles rendering text scale."
   },
   {
     id: 68,
     subject: "Web Systems and Technologies",
     difficulty: "Easy",
-    question: "Which selector wins styles if a paragraph matches a type tag rule and a class selector rule simultaneously?",
+    question: "Which CSS rule should be applied to strip default bullets from HTML list items?",
     choices: [
-      "Type tag selector",
-      "Class selector",
-      "They cancel out",
-      "Whichever is written higher"
+      "list-bullets: none;",
+      "list-style-type: none;",
+      "text-decoration: none;",
+      "bullet-type: hidden;"
     ],
     correctAnswer: 1,
-    explanation: "Class selectors have a higher specificity score than basic element type tag selectors."
+    explanation: "The rule CSS property 'list-style-type: none;' strips default bullets from list items."
   },
   {
     id: 69,
     subject: "Web Systems and Technologies",
     difficulty: "Medium",
-    question: "What is the role of form action attribute configurations?",
+    question: "P3.1. Which of the following correctly describes the visual effect of the CSS property display: none;?",
     choices: [
-      "To describe the HTTP verb used (GET/POST)",
-      "To specify the target endpoint URL where form inputs are transmitted",
-      "To change local fonts automatically",
-      "To prevent default page reload issues"
+      "The element becomes fully transparent but still takes up structural space.",
+      "The element is completely removed from the rendering layout as if it did not exist.",
+      "The font color matches the background.",
+      "The element moves off-screen to the left side."
     ],
     correctAnswer: 1,
-    explanation: "The action attribute declares where the gathered browser parameters are transmitted for server evaluation."
+    explanation: "From the Practice Questions, the CSS property display: none; completely removes the element from the rendering layout as if it did not exist."
   },
   {
     id: 70,
     subject: "Web Systems and Technologies",
-    difficulty: "Hard",
-    question: "Which CSS box-model attribute introduces blank spacing external to border boundaries?",
+    difficulty: "Medium",
+    question: "P3.2. In a standard HTML form, which attribute dictates how the data is packaged and sent to the server (e.g., hiding or exposing it via the URL)?",
     choices: [
-      "padding",
-      "margin",
-      "outline",
-      "content-width"
+      "action",
+      "method",
+      "target",
+      "enctype"
     ],
     correctAnswer: 1,
-    explanation: "Margin defines clear offsets outer-region to borders. Padding details clearance inner-region to borders."
+    explanation: "The 'method' attribute dictates how the data is packaged and sent to the server (e.g., hiding or exposing it via the URL)."
   },
   {
     id: 71,
     subject: "Web Systems and Technologies",
-    difficulty: "Easy",
-    question: "Select the structural layouts which represent semantic side properties (like widgets or site-navigation side rails):",
+    difficulty: "Medium",
+    question: "Which of the following is true regarding inline styles and external stylesheet rules according to CSS basics?",
     choices: [
-      "`<nav>`",
-      "`<aside>`",
-      "`<article>`",
-      "`<main>`"
+      "External stylesheet rules always override inline styles because they are in separate stylesheet files.",
+      "Inline styles have a higher specificity weight and override conflicting external stylesheet rules.",
+      "Inline styles cannot be written using the style attribute.",
+      "Inline styles have lower specificity priority weight than external stylesheet rules."
     ],
     correctAnswer: 1,
-    explanation: "An `<aside>` element defines sidebars or tangential segments matching main page themes."
+    explanation: "According to the sheet, inline style rules are written directly inside an opening HTML tag using the style attribute, having a higher specificity weight and overriding conflicting external stylesheet rules."
   },
   {
     id: 72,
     subject: "Web Systems and Technologies",
-    difficulty: "Medium",
-    question: "How does CSS specificity handle inline styles applied properties directly inside elements?",
+    difficulty: "Easy",
+    question: "Which element represents the individual bulleted list items inside an unordered list (<ul>) or ordered list (<ol>)?",
     choices: [
-      "They have equal weight to CSS class files",
-      "They have the absolute highest weight, overriding normal selectors",
-      "They get bypassed by type definitions",
-      "They only apply to mobile views"
+      "<list-item>",
+      "<item>",
+      "<li>",
+      "<ul>"
     ],
-    correctAnswer: 1,
-    explanation: "Inline styles retain higher specificity scores than regular stylesheet rules like classes and IDs."
+    correctAnswer: 2,
+    explanation: "The tag <li> defines individual list items."
   },
   {
     id: 73,
     subject: "Web Systems and Technologies",
-    difficulty: "Hard",
-    question: "If a CSS file declares 'display: grid; grid-template-columns: repeat(3, 1fr);', what is the output?",
+    difficulty: "Easy",
+    question: "In an HTML table structure, which specific tags represent row containers and header cells respectively?",
     choices: [
-      "A grid with three rows of dynamic height",
-      "A grid with three columns of equal fractional width",
-      "One single column tracking three lines of text",
-      "An automated list with three bullet spaces"
+      "<tr> and <th>",
+      "<row> and <head>",
+      "<td> and <th>",
+      "<tr> and <td>"
     ],
-    correctAnswer: 1,
-    explanation: "This configures a grid composed of three columns, each carrying an equal fraction of the available wrapper width."
+    correctAnswer: 0,
+    explanation: "According to the sheet, <tr> defines a table row, and <th> table header cells."
   },
   {
     id: 74,
     subject: "Web Systems and Technologies",
     difficulty: "Medium",
-    question: "Where should the viewport meta tag reside for proper mobile responsive scale rendering?",
+    question: "Given 'margin: 10px 20px 5px 15px;', what are the spacing measurements for Top and Right margins respectively?",
     choices: [
-      "Inside `<body>` boundaries",
-      "Inside `<head>` boundaries",
-      "Directly beneath `<footer>` layout",
-      "Nowhere, it represents basic text"
+      "10px and 5px",
+      "20px and 15px",
+      "10px and 20px",
+      "15px and 5px"
     ],
-    correctAnswer: 1,
-    explanation: "Viewport meta configs are viewport settings and must be registered inside the `<head>` metadata layout."
+    correctAnswer: 2,
+    explanation: "Margin definitions flow clockwise around the perimeter: Top (10px), Right (20px), Bottom (5px), and Left (15px)."
   },
   {
     id: 75,
     subject: "Web Systems and Technologies",
-    difficulty: "Easy",
-    question: "What is the primary semantic element of document footers (copyright and metadata base tracking)?",
+    difficulty: "Medium",
+    question: "According to the CSS Selector guide, what is the correct syntax for a class selector and a single id selector respectively?",
     choices: [
-      "`<bottom>`",
-      "`<footer>`",
-      "`<aside>`",
-      "`<meta>`"
+      ".classname and #idvalue",
+      "#classname and .idvalue",
+      "class:classname and id:idvalue",
+      "*classname and @idvalue"
     ],
-    correctAnswer: 1,
-    explanation: "The `<footer>` element houses baseline metadata blocks, signature tags, copyright notices, and associated footnotes."
+    correctAnswer: 0,
+    explanation: "The selector .classname targets specific class attributes, whereas #idvalue targets a matching unique id attribute."
   },
 
   // ==========================================
